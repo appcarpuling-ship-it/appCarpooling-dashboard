@@ -1,2 +1,20 @@
 node_modules/
-.claude    
+.claude
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor files
+.vscode/
+.idea/
