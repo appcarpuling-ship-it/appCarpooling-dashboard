@@ -113,7 +113,12 @@ const Users = () => {
   }
 
   const users = usersData?.data || []
-  const pagination = usersData?.pagination || {}
+  const pagination = {
+    total: usersData?.total || 0,
+    currentPage: usersData?.page || 1,
+    totalPages: usersData?.pages || 1,
+    count: usersData?.count || 0
+  }
 
   if (error) {
     return (

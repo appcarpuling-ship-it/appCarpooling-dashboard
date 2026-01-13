@@ -97,7 +97,12 @@ const Bookings = () => {
   }
 
   const bookings = bookingsData?.data || []
-  const pagination = bookingsData?.pagination || {}
+  const pagination = {
+    total: bookingsData?.total || 0,
+    currentPage: bookingsData?.page || 1,
+    totalPages: bookingsData?.pages || 1,
+    count: bookingsData?.count || 0
+  }
 
   if (error) {
     return (

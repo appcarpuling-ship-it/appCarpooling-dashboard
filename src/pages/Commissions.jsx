@@ -145,7 +145,12 @@ const Commissions = () => {
   }
 
   const commissions = commissionsData?.data || []
-  const pagination = commissionsData?.pagination || {}
+  const pagination = {
+    total: commissionsData?.total || 0,
+    currentPage: commissionsData?.page || 1,
+    totalPages: commissionsData?.pages || 1,
+    count: commissionsData?.count || 0
+  }
   const summary = summaryData || {}
 
   // Generate month/year options
