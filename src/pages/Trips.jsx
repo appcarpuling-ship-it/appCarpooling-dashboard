@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, Table, Button, Input, Modal, Badge, Loading } from '../components/common'
-import { adminService } from '../services'
+import { adminService, tripService } from '../services'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -79,12 +79,9 @@ const Trips = () => {
 
   const viewTripDetails = async (tripId) => {
     try {
-      const tripResponse = await fetch(`/api/trips/${tripId}`)
-      if (tripResponse.ok) {
-        const trip = await tripResponse.json()
-        setSelectedTrip(trip.data)
-        setShowTripModal(true)
-      }
+      const trip = await tripService.getById(tripId)
+      setSelectedTrip(trip.data)
+      setShowTripModal(true)
     } catch (error) {
       toast.error('Error al cargar detalles del viaje')
     }
@@ -117,8 +114,13 @@ const Trips = () => {
     }).format(price)
   }
 
-  const trips = tripsData?.data?.trips || []
-  const pagination = tripsData?.data?.pagination || {}
+  const trips = tripsData?.data?.data || []
+  const pagination = {
+    total: tripsData?.data?.total || 0,
+    currentPage: tripsData?.data?.page || 1,
+    totalPages: tripsData?.data?.pages || 1,
+    limit: filters.limit
+  }
 
   if (error) {
     return (
