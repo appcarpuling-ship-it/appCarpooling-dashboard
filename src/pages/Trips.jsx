@@ -114,11 +114,11 @@ const Trips = () => {
     }).format(price)
   }
 
-  const trips = tripsData?.data?.data || []
+  const trips = tripsData?.data || []
   const pagination = {
-    total: tripsData?.data?.total || 0,
-    currentPage: tripsData?.data?.page || 1,
-    totalPages: tripsData?.data?.pages || 1,
+    total: tripsData?.total || 0,
+    currentPage: tripsData?.page || 1,
+    totalPages: tripsData?.pages || 1,
     limit: filters.limit
   }
 
