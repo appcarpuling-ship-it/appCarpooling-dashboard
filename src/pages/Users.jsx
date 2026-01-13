@@ -112,8 +112,8 @@ const Users = () => {
     return <Badge variant="success">Activo</Badge>
   }
 
-  const users = usersData?.data?.users || []
-  const pagination = usersData?.data?.pagination || {}
+  const users = usersData?.data || []
+  const pagination = usersData?.pagination || {}
 
   if (error) {
     return (

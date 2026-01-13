@@ -96,8 +96,8 @@ const Bookings = () => {
     }).format(price)
   }
 
-  const bookings = bookingsData?.data?.bookings || []
-  const pagination = bookingsData?.data?.pagination || {}
+  const bookings = bookingsData?.data || []
+  const pagination = bookingsData?.pagination || {}
 
   if (error) {
     return (

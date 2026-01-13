@@ -144,9 +144,9 @@ const Commissions = () => {
     }).format(price)
   }
 
-  const commissions = commissionsData?.data?.commissions || []
-  const pagination = commissionsData?.data?.pagination || {}
-  const summary = summaryData?.data || {}
+  const commissions = commissionsData?.data || []
+  const pagination = commissionsData?.pagination || {}
+  const summary = summaryData || {}
 
   // Generate month/year options
   const currentYear = new Date().getFullYear()

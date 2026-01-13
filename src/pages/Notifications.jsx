@@ -173,7 +173,7 @@ const Notifications = () => {
 
   const notifications = notificationsData?.data || []
   const pagination = notificationsData?.pagination || {}
-  const unreadCount = unreadData?.data?.unreadCount || 0
+  const unreadCount = unreadData?.unreadCount || 0
 
   if (error) {
     return (

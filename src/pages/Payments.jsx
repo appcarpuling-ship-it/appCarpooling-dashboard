@@ -143,12 +143,12 @@ const Payments = () => {
 
   // Combine sent and received payments
   const allPayments = [
-    ...(sentPayments?.data?.payments || []).map(p => ({ ...p, type: 'sent' })),
-    ...(receivedPayments?.data?.payments || []).map(p => ({ ...p, type: 'received' }))
+    ...(sentPayments?.payments || []).map(p => ({ ...p, type: 'sent' })),
+    ...(receivedPayments?.payments || []).map(p => ({ ...p, type: 'received' }))
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
   const isLoading = loadingSent || loadingReceived
-  const summary = summaryData?.data || {}
+  const summary = summaryData || {}
 
   return (
     <div className="space-y-6">
