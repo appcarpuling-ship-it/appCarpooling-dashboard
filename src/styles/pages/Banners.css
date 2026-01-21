@@ -1,0 +1,411 @@
+/* Banners.css - Estilos para página principal de banners */
+
+.banners-page {
+  padding: 20px;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+.banners-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.banners-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.create-banner-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.create-banner-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+}
+
+.create-banner-btn:active {
+  transform: translateY(0);
+}
+
+/* Package Selector */
+.package-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.package-btn {
+  position: relative;
+  padding: 16px 12px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.package-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  transition: background 0.3s ease;
+}
+
+.package-btn.free {
+  color: #2196f3;
+}
+
+.package-btn.free::before {
+  background: #2196f3;
+}
+
+.package-btn.free.active {
+  border-color: #2196f3;
+  background: #e3f2fd;
+}
+
+.package-btn.premium {
+  color: #ff9800;
+}
+
+.package-btn.premium::before {
+  background: #ff9800;
+}
+
+.package-btn.premium.active {
+  border-color: #ff9800;
+  background: #fff3e0;
+}
+
+.package-btn.vip {
+  color: #f44336;
+}
+
+.package-btn.vip::before {
+  background: #f44336;
+}
+
+.package-btn.vip.active {
+  border-color: #f44336;
+  background: #ffebee;
+}
+
+.package-btn.enterprise {
+  color: #4caf50;
+}
+
+.package-btn.enterprise::before {
+  background: #4caf50;
+}
+
+.package-btn.enterprise.active {
+  border-color: #4caf50;
+  background: #e8f5e9;
+}
+
+.package-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.package-count {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Tabs */
+.tabs-container {
+  display: flex;
+  gap: 0;
+  background: white;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 24px;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #999;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tab-btn:hover {
+  color: #666;
+  background: #f8f9fa;
+}
+
+.tab-btn.active {
+  color: #0066cc;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #0066cc;
+}
+
+/* Tab Content */
+.tab-content {
+  background: white;
+  border-radius: 0 0 8px 8px;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+}
+
+/* Alertas */
+.alert {
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert.error {
+  background: #ffebee;
+  border-left: 4px solid #f44336;
+  color: #c62828;
+}
+
+.alert.success {
+  background: #e8f5e9;
+  border-left: 4px solid #4caf50;
+  color: #2e7d32;
+}
+
+.alert-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 16px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.alert-close:hover {
+  opacity: 1;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #999;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f0f0f0;
+  border-top: 3px solid #0066cc;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Modal para formulario */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .banners-page {
+    padding: 16px;
+  }
+
+  .banners-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .package-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .banners-page {
+    padding: 12px;
+  }
+
+  .banners-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .banners-header h1 {
+    font-size: 22px;
+  }
+
+  .create-banner-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .package-selector {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .package-btn {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .tabs-container {
+    margin-bottom: 16px;
+  }
+
+  .tab-btn {
+    padding: 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .banners-page {
+    padding: 8px;
+  }
+
+  .banners-header {
+    padding: 16px;
+  }
+
+  .banners-header h1 {
+    font-size: 18px;
+  }
+
+  .package-selector {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+}
