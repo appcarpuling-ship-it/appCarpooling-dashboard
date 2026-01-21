@@ -314,7 +314,9 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
           {/* Imágenes Adicionales */}
           <div className="form-group">
             <label className="form-label">Imágenes Adicionales del Pack</label>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+            
+            {/* Inputs para agregar nuevas imágenes */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
               <input
                 type="url"
                 className="form-input"
@@ -363,57 +365,99 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
               </button>
             </div>
 
+            {/* Lista de URLs de imágenes editables */}
             {formData.metadata.images.length > 0 && (
-              <div style={{ marginTop: '12px' }}>
-                <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                  {formData.metadata.images.length} imagen(es) agregada(s)
+              <div style={{ marginTop: '16px' }}>
+                <p style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
+                  {formData.metadata.images.length} imagen(es) del pack:
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {formData.metadata.images.map((img, idx) => (
                     <div
                       key={idx}
                       style={{
-                        position: 'relative',
-                        overflow: 'hidden',
+                        display: 'flex',
+                        gap: '8px',
+                        alignItems: 'stretch',
+                        padding: '12px',
+                        backgroundColor: '#f8f9fa',
                         borderRadius: '6px',
-                        backgroundColor: '#f0f0f0',
-                        aspectRatio: '1'
+                        border: '1px solid #e9ecef'
                       }}
                     >
-                      <img
-                        src={img}
-                        alt={`Imagen ${idx + 1}`}
+                      {/* Miniatura */}
+                      <div
                         style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
+                          width: '80px',
+                          minWidth: '80px',
+                          height: '80px',
+                          overflow: 'hidden',
+                          borderRadius: '4px',
+                          backgroundColor: '#fff',
+                          border: '1px solid #dee2e6'
                         }}
-                        onError={(e) => {
-                          e.target.src = getSvgPlaceholder(100, 100);
-                        }}
-                      />
+                      >
+                        <img
+                          src={img}
+                          alt={`Imagen ${idx + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          onError={(e) => {
+                            e.target.src = getSvgPlaceholder(80, 80);
+                          }}
+                        />
+                      </div>
+
+                      {/* URL Input */}
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <input
+                          type="url"
+                          className="form-input"
+                          value={img}
+                          onChange={(e) => {
+                            const newImages = [...formData.metadata.images];
+                            newImages[idx] = e.target.value;
+                            setFormData(prev => ({
+                              ...prev,
+                              metadata: {
+                                ...prev.metadata,
+                                images: newImages
+                              }
+                            }));
+                          }}
+                          style={{
+                            flex: 1,
+                            fontFamily: 'monospace',
+                            fontSize: '12px'
+                          }}
+                          placeholder="URL de la imagen"
+                        />
+                        <span style={{ fontSize: '11px', color: '#666' }}>
+                          Imagen {idx + 1} de {formData.metadata.images.length}
+                        </span>
+                      </div>
+
+                      {/* Botón eliminar */}
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(idx)}
                         style={{
-                          position: 'absolute',
-                          top: '4px',
-                          right: '4px',
-                          background: 'rgba(220, 53, 69, 0.9)',
+                          padding: '8px 12px',
+                          background: '#dc3545',
                           color: 'white',
                           border: 'none',
-                          borderRadius: '50%',
-                          width: '24px',
-                          height: '24px',
-                          padding: 0,
+                          borderRadius: '4px',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '14px'
+                          gap: '6px',
+                          whiteSpace: 'nowrap'
                         }}
                       >
-                        ×
+                        <Trash2 size={16} /> Eliminar
                       </button>
                     </div>
                   ))}
