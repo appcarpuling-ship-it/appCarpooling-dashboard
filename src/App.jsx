@@ -18,6 +18,7 @@ import Bookings from './pages/Bookings'
 import Payments from './pages/Payments'
 import Commissions from './pages/Commissions'
 import Chat from './pages/Chat'
+import Banners from './pages/Banners'
 import Notifications from './pages/Notifications'
 import Analytics from './pages/Analytics'
 import Settings from './pages/Settings'
@@ -54,6 +55,7 @@ function App() {
         <Route path="payments" element={<Payments />} />
         <Route path="commissions" element={<Commissions />} />
         <Route path="chat" element={<Chat />} />
+        <Route path="banners" element={<Banners />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="settings" element={<Settings />} />

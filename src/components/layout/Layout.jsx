@@ -16,6 +16,7 @@ import {
   X,
   BarChart3,
   DollarSign,
+  Image,
 } from 'lucide-react'
 
 const Layout = () => {
@@ -33,6 +34,7 @@ const Layout = () => {
     { name: 'Pagos', href: '/payments', icon: CreditCard },
     { name: 'Comisiones', href: '/commissions', icon: DollarSign },
     { name: 'Chat', href: '/chat', icon: MessageCircle },
+    { name: 'Banners', href: '/banners', icon: Image },
     { name: 'Notificaciones', href: '/notifications', icon: Bell },
     { name: 'Análisis', href: '/analytics', icon: TrendingUp },
     { name: 'Configuración', href: '/settings', icon: Settings },
