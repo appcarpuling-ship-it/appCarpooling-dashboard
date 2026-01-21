@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X, RefreshCw } from 'lucide-react';
+import { Save, X, RefreshCw, Trash2, Plus } from 'lucide-react';
 import { getRandomPlaceholder, getSvgPlaceholder } from '../../constants/placeholders';
 import '../../styles/components/BannerForm.css';
 
@@ -11,7 +11,6 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
     clickUrl: '',
     order: 0,
     type: 'banner',
-    dimensions: { width: 1080, height: 300 },
     campaignPeriod: { startDate: '', endDate: '' },
     visibility: {
       userTypes: 'both',
@@ -20,21 +19,22 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
     metadata: {
       campaignName: '',
       category: '',
-      tags: []
+      tags: [],
+      images: [] // Array de imágenes adicionales
     }
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [newTag, setNewTag] = useState('');
+  const [newImageUrl, setNewImageUrl] = useState('');
 
   useEffect(() => {
     if (banner) {
       setFormData({
         ...banner,
-        dimensions: banner.dimensions || { width: 1080, height: 300 },
         campaignPeriod: banner.campaignPeriod || { startDate: '', endDate: '' },
-        metadata: banner.metadata || { campaignName: '', category: '', tags: [] }
+        metadata: banner.metadata || { campaignName: '', category: '', tags: [], images: [] }
       });
     }
   }, [banner]);
@@ -56,7 +56,7 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
     }
 
     if (!formData.imageUrl.trim()) {
-      newErrors.imageUrl = 'La URL de la imagen es requerida';
+      newErrors.imageUrl = 'La URL de la imagen principal es requerida';
     } else if (!isValidUrl(formData.imageUrl)) {
       newErrors.imageUrl = 'La URL de la imagen no es válida';
     }
@@ -81,17 +81,6 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
         [name]: null
       }));
     }
-  };
-
-  const handleDimensionsChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      dimensions: {
-        ...prev.dimensions,
-        [name]: parseInt(value) || 0
-      }
-    }));
   };
 
   const handleDateChange = (e) => {
@@ -148,12 +137,48 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
     }));
   };
 
+  const handleAddImage = () => {
+    if (newImageUrl.trim() && isValidUrl(newImageUrl)) {
+      setFormData(prev => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          images: [...prev.metadata.images, newImageUrl.trim()]
+        }
+      }));
+      setNewImageUrl('');
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      metadata: {
+        ...prev.metadata,
+        images: prev.metadata.images.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
   const handleGeneratePlaceholder = () => {
     const placeholder = getRandomPlaceholder('banner');
     setFormData(prev => ({
       ...prev,
       imageUrl: placeholder
     }));
+  };
+
+  const handleGenerateAdditionalImage = () => {
+    const placeholder = getRandomPlaceholder('banner');
+    if (!formData.metadata.images.includes(placeholder)) {
+      setFormData(prev => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          images: [...prev.metadata.images, placeholder]
+        }
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -285,43 +310,117 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
             />
             {errors.clickUrl && <span className="error-message">{errors.clickUrl}</span>}
           </div>
-        </div>
 
-        {/* Dimensiones */}
-        <div className="form-section">
-          <h3>📐 Dimensiones</h3>
-
-          <div className="dimensions-grid">
-            <div className="form-group">
-              <label className="form-label">Ancho (px)</label>
+          {/* Imágenes Adicionales */}
+          <div className="form-group">
+            <label className="form-label">Imágenes Adicionales del Pack</label>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
               <input
-                type="number"
+                type="url"
                 className="form-input"
-                name="width"
-                value={formData.dimensions.width}
-                onChange={handleDimensionsChange}
-                min="100"
-                max="2000"
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImage())}
+                placeholder="URL de imagen adicional"
               />
+              <button
+                type="button"
+                onClick={handleAddImage}
+                disabled={!newImageUrl.trim() || !isValidUrl(newImageUrl)}
+                style={{
+                  padding: '10px 16px',
+                  background: '#0066cc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  opacity: (!newImageUrl.trim() || !isValidUrl(newImageUrl)) ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Plus size={16} /> Agregar
+              </button>
+              <button
+                type="button"
+                onClick={handleGenerateAdditionalImage}
+                style={{
+                  padding: '10px 16px',
+                  background: '#17a2b8',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <RefreshCw size={16} /> Generar
+              </button>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Altura (px)</label>
-              <input
-                type="number"
-                className="form-input"
-                name="height"
-                value={formData.dimensions.height}
-                onChange={handleDimensionsChange}
-                min="50"
-                max="2000"
-              />
-            </div>
+            {formData.metadata.images.length > 0 && (
+              <div style={{ marginTop: '12px' }}>
+                <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                  {formData.metadata.images.length} imagen(es) agregada(s)
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '8px' }}>
+                  {formData.metadata.images.map((img, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        position: 'relative',
+                        overflow: 'hidden',
+                        borderRadius: '6px',
+                        backgroundColor: '#f0f0f0',
+                        aspectRatio: '1'
+                      }}
+                    >
+                      <img
+                        src={img}
+                        alt={`Imagen ${idx + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                        onError={(e) => {
+                          e.target.src = getSvgPlaceholder(100, 100);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(idx)}
+                        style={{
+                          position: 'absolute',
+                          top: '4px',
+                          right: '4px',
+                          background: 'rgba(220, 53, 69, 0.9)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          padding: 0,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-
-          <p style={{ fontSize: '12px', color: '#999', margin: '12px 0 0 0' }}>
-            Dimensiones: {formData.dimensions.width}px × {formData.dimensions.height}px
-          </p>
         </div>
 
         {/* Período de Campaña */}
