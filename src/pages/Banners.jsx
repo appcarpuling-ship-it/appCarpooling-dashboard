@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaToggleOn, FaToggleOff, FaChartBar } from 'react-icons/fa';
+import { Plus, Eye, BarChart3 } from 'lucide-react';
 import BannerForm from '../components/common/BannerForm';
 import BannerList from '../components/common/BannerList';
 import BannerStats from '../components/common/BannerStats';
@@ -153,7 +153,7 @@ const Banners = () => {
             setShowForm(true);
           }}
         >
-          <FaPlus /> Crear Banner
+          <Plus size={18} /> Crear Banner
         </button>
       </div>
 
@@ -191,13 +191,13 @@ const Banners = () => {
           className={`tab-btn ${activeTab === 'list' ? 'active' : ''}`}
           onClick={() => setActiveTab('list')}
         >
-          <FaEye /> Banners Activos
+          <Eye size={18} /> Banners Activos
         </button>
         <button
           className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
           onClick={() => setActiveTab('stats')}
         >
-          <FaChartBar /> Estadísticas
+          <BarChart3 size={18} /> Estadísticas
         </button>
       </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSave, FaTimes } from 'react-icons/fa';
+import { Save, X } from 'lucide-react';
 import '../../styles/components/BannerForm.css';
 
 const BannerForm = ({ banner, onSubmit, onCancel }) => {
@@ -462,14 +462,14 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
           onClick={onCancel}
           disabled={loading}
         >
-          <FaTimes /> Cancelar
+          <X size={18} /> Cancelar
         </button>
         <button
           type="submit"
           className="form-btn submit"
           disabled={loading}
         >
-          <FaSave /> {loading ? 'Guardando...' : banner ? 'Actualizar' : 'Crear'}
+          <Save size={18} /> {loading ? 'Guardando...' : banner ? 'Actualizar' : 'Crear'}
         </button>
       </div>
     </form>

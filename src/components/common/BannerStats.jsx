@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaEye, FaMousePointer, FaChartBar, FaPercentage } from 'react-icons/fa';
+import { Eye, Click, BarChart3, Percent } from 'lucide-react';
 import '../../styles/components/BannerStats.css';
 
 const BannerStats = ({ stats, banners }) => {
@@ -27,7 +27,7 @@ const BannerStats = ({ stats, banners }) => {
       <div className="stats-summary">
         <div className="stat-card">
           <div className="stat-icon total">
-            <FaChartBar />
+            <BarChart3 size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total de Banners</p>
@@ -38,7 +38,7 @@ const BannerStats = ({ stats, banners }) => {
 
         <div className="stat-card">
           <div className="stat-icon views">
-            <FaEye />
+            <Eye size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Vistas</p>
@@ -49,7 +49,7 @@ const BannerStats = ({ stats, banners }) => {
 
         <div className="stat-card">
           <div className="stat-icon clicks">
-            <FaMousePointer />
+            <Click size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Clics</p>
@@ -60,7 +60,7 @@ const BannerStats = ({ stats, banners }) => {
 
         <div className="stat-card">
           <div className="stat-icon ctr">
-            <FaPercentage />
+            <Percent size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">CTR Promedio</p>

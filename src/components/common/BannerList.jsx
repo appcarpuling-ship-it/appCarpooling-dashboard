@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaGripVertical } from 'react-icons/fa';
+import { Edit, Trash2, Toggle2, GripVertical } from 'lucide-react';
 import '../../styles/components/BannerList.css';
 
 const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) => {
@@ -62,7 +62,7 @@ const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) =>
           >
             {/* Icono de drag */}
             <div className="banner-drag-handle">
-              <FaGripVertical />
+              <GripVertical size={18} />
             </div>
 
             {/* Imagen del banner */}
@@ -98,7 +98,7 @@ const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) =>
                 onClick={() => onToggleStatus(banner._id)}
                 title={banner.isActive ? 'Desactivar' : 'Activar'}
               >
-                {banner.isActive ? <FaToggleOn /> : <FaToggleOff />}
+                {banner.isActive ? <Toggle2 size={18} /> : <Toggle2 size={18} />}
               </button>
 
               <button
@@ -106,7 +106,7 @@ const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) =>
                 onClick={() => onEdit(banner)}
                 title="Editar"
               >
-                <FaEdit />
+                <Edit size={18} />
               </button>
 
               <button
@@ -114,7 +114,7 @@ const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) =>
                 onClick={() => onDelete(banner._id)}
                 title="Eliminar"
               >
-                <FaTrash />
+                <Trash2 size={18} />
               </button>
             </div>
 
