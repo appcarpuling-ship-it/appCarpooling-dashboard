@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Click, BarChart3, Percent } from 'lucide-react';
+import { Eye, MousePointer, BarChart3, Percent } from 'lucide-react';
 import '../../styles/components/BannerStats.css';
 
 const BannerStats = ({ stats, banners }) => {
@@ -49,7 +49,7 @@ const BannerStats = ({ stats, banners }) => {
 
         <div className="stat-card">
           <div className="stat-icon clicks">
-            <Click size={24} />
+            <MousePointer size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Clics</p>

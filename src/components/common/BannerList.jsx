@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit, Trash2, Toggle2, GripVertical } from 'lucide-react';
+import { Edit, Trash2, ToggleRight, ToggleLeft, GripVertical } from 'lucide-react';
 import '../../styles/components/BannerList.css';
 
 const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) => {
@@ -98,7 +98,7 @@ const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) =>
                 onClick={() => onToggleStatus(banner._id)}
                 title={banner.isActive ? 'Desactivar' : 'Activar'}
               >
-                {banner.isActive ? <Toggle2 size={18} /> : <Toggle2 size={18} />}
+                {banner.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
               </button>
 
               <button
