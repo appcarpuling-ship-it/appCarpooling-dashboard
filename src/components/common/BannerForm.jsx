@@ -47,6 +47,55 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
       return false;
     }
   };
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result;
+        setFormData(prev => ({
+          ...prev,
+          imageUrl: base64
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAdditionalImageFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result;
+        if (base64) {
+          setFormData(prev => ({
+            ...prev,
+            metadata: {
+              ...prev.metadata,
+              images: [...prev.metadata.images, base64]
+            }
+          }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageUrlDirectly = (imageData) => {
+    if (imageData && !formData.metadata.images.includes(imageData)) {
+      setFormData(prev => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          images: [...prev.metadata.images, imageData]
+        }
+      }));
+    }
+  };
+
+  const handleGenerateAdditionalImage = () => {
+    const placeholder = getRandomPlaceholder('banner');
+    handleImageUrlDirectly(placeholder);
 
   const validateForm = () => {
     const newErrors = {};
@@ -249,39 +298,23 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
           </div>
         </div>
 
-        {/* URLs */}
+        {/* Imágenes */}
         <div className="form-section">
-          <h3>🔗 URLs</h3>
+          <h3>🖼️ Imágenes</h3>
 
           <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <label className="form-label required">URL de la Imagen</label>
-              <button
-                type="button"
-                onClick={handleGeneratePlaceholder}
-                style={{
-                  padding: '6px 12px',
-                  background: '#17a2b8',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <RefreshCw size={14} /> Generar imagen
-              </button>
-            </div>
+            <label className="form-label required">Imagen Principal</label>
             <input
-              type="url"
-              className={`form-input ${errors.imageUrl ? 'error' : ''}`}
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleInputChange}
-              placeholder="https://ejemplo.com/imagen.jpg"
+              type="file"
+              accept="image/*"
+              onChange={handleImageFileChange}
+              style={{
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                width: '100%',
+                cursor: 'pointer'
+              }}
             />
             {errors.imageUrl && <span className="error-message">{errors.imageUrl}</span>}
 
@@ -315,36 +348,21 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
           <div className="form-group">
             <label className="form-label">Imágenes Adicionales del Pack</label>
             
-            {/* Inputs para agregar nuevas imágenes */}
+            {/* Input para cargar múltiples archivos */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
               <input
-                type="url"
-                className="form-input"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImage())}
-                placeholder="URL de imagen adicional"
-              />
-              <button
-                type="button"
-                onClick={handleAddImage}
-                disabled={!newImageUrl.trim() || !isValidUrl(newImageUrl)}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleAdditionalImageFileChange}
                 style={{
-                  padding: '10px 16px',
-                  background: '#0066cc',
-                  color: 'white',
-                  border: 'none',
+                  padding: '10px',
+                  border: '1px solid #ddd',
                   borderRadius: '6px',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  opacity: (!newImageUrl.trim() || !isValidUrl(newImageUrl)) ? 0.5 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
+                  flex: 1,
+                  cursor: 'pointer'
                 }}
-              >
-                <Plus size={16} /> Agregar
-              </button>
+              />
               <button
                 type="button"
                 onClick={handleGenerateAdditionalImage}
@@ -365,100 +383,78 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
               </button>
             </div>
 
-            {/* Lista de URLs de imágenes editables */}
+            {/* Lista de imágenes cargadas */}
             {formData.metadata.images.length > 0 && (
               <div style={{ marginTop: '16px' }}>
                 <p style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
                   {formData.metadata.images.length} imagen(es) del pack:
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
                   {formData.metadata.images.map((img, idx) => (
                     <div
                       key={idx}
                       style={{
+                        position: 'relative',
+                        overflow: 'hidden',
+                        borderRadius: '8px',
+                        backgroundColor: '#fff',
+                        border: '1px solid #dee2e6',
+                        aspectRatio: '1',
                         display: 'flex',
-                        gap: '8px',
-                        alignItems: 'stretch',
-                        padding: '12px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '6px',
-                        border: '1px solid #e9ecef'
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
                     >
-                      {/* Miniatura */}
-                      <div
+                      <img
+                        src={img}
+                        alt={`Imagen ${idx + 1}`}
                         style={{
-                          width: '80px',
-                          minWidth: '80px',
-                          height: '80px',
-                          overflow: 'hidden',
-                          borderRadius: '4px',
-                          backgroundColor: '#fff',
-                          border: '1px solid #dee2e6'
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
                         }}
-                      >
-                        <img
-                          src={img}
-                          alt={`Imagen ${idx + 1}`}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                          onError={(e) => {
-                            e.target.src = getSvgPlaceholder(80, 80);
-                          }}
-                        />
-                      </div>
-
-                      {/* URL Input */}
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <input
-                          type="url"
-                          className="form-input"
-                          value={img}
-                          onChange={(e) => {
-                            const newImages = [...formData.metadata.images];
-                            newImages[idx] = e.target.value;
-                            setFormData(prev => ({
-                              ...prev,
-                              metadata: {
-                                ...prev.metadata,
-                                images: newImages
-                              }
-                            }));
-                          }}
-                          style={{
-                            flex: 1,
-                            fontFamily: 'monospace',
-                            fontSize: '12px'
-                          }}
-                          placeholder="URL de la imagen"
-                        />
-                        <span style={{ fontSize: '11px', color: '#666' }}>
-                          Imagen {idx + 1} de {formData.metadata.images.length}
-                        </span>
-                      </div>
-
-                      {/* Botón eliminar */}
+                        onError={(e) => {
+                          e.target.src = getSvgPlaceholder(120, 120);
+                        }}
+                      />
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(idx)}
                         style={{
-                          padding: '8px 12px',
-                          background: '#dc3545',
+                          position: 'absolute',
+                          top: '4px',
+                          right: '4px',
+                          background: 'rgba(220, 53, 69, 0.95)',
                           color: 'white',
                           border: 'none',
-                          borderRadius: '4px',
+                          borderRadius: '50%',
+                          width: '28px',
+                          height: '28px',
+                          padding: 0,
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '6px',
-                          whiteSpace: 'nowrap'
+                          justifyContent: 'center',
+                          fontSize: '16px',
+                          fontWeight: 'bold',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                         }}
                       >
-                        <Trash2 size={16} /> Eliminar
+                        ×
                       </button>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '0',
+                        left: '0',
+                        right: '0',
+                        background: 'rgba(0,0,0,0.6)',
+                        color: 'white',
+                        padding: '4px',
+                        fontSize: '11px',
+                        textAlign: 'center'
+                      }}>
+                        {idx + 1}/{formData.metadata.images.length}
+                      </div>
                     </div>
                   ))}
                 </div>
