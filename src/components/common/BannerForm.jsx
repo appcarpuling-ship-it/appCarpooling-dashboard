@@ -47,6 +47,8 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
       return false;
     }
   };
+
+  const handleImageFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -96,6 +98,7 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
   const handleGenerateAdditionalImage = () => {
     const placeholder = getRandomPlaceholder('banner');
     handleImageUrlDirectly(placeholder);
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -105,9 +108,7 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
     }
 
     if (!formData.imageUrl.trim()) {
-      newErrors.imageUrl = 'La URL de la imagen principal es requerida';
-    } else if (!isValidUrl(formData.imageUrl)) {
-      newErrors.imageUrl = 'La URL de la imagen no es válida';
+      newErrors.imageUrl = 'La imagen principal es requerida';
     }
 
     if (formData.clickUrl.trim() && !isValidUrl(formData.clickUrl)) {
@@ -215,19 +216,6 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
       ...prev,
       imageUrl: placeholder
     }));
-  };
-
-  const handleGenerateAdditionalImage = () => {
-    const placeholder = getRandomPlaceholder('banner');
-    if (!formData.metadata.images.includes(placeholder)) {
-      setFormData(prev => ({
-        ...prev,
-        metadata: {
-          ...prev.metadata,
-          images: [...prev.metadata.images, placeholder]
-        }
-      }));
-    }
   };
 
   const handleSubmit = async (e) => {
