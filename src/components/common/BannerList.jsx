@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Edit, Trash2, ToggleRight, ToggleLeft, GripVertical } from 'lucide-react';
+import { getSvgPlaceholder } from '../../constants/placeholders';
 import '../../styles/components/BannerList.css';
 
 const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) => {
@@ -71,7 +72,7 @@ const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) =>
                 src={banner.imageUrl}
                 alt={banner.title}
                 onError={(e) => {
-                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="80"%3E%3Crect fill="%23f0f0f0" width="150" height="80"/%3E%3Ctext x="50%" y="50%" font-size="12" fill="%23999" text-anchor="middle" dy=".3em"%3EError%3C/text%3E%3C/svg%3E';
+                  e.target.src = getSvgPlaceholder(150, 80);
                 }}
               />
               <span className="order-badge">{index + 1}</span>

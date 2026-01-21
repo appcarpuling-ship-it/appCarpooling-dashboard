@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X } from 'lucide-react';
+import { Save, X, RefreshCw } from 'lucide-react';
+import { getRandomPlaceholder, getSvgPlaceholder } from '../../constants/placeholders';
 import '../../styles/components/BannerForm.css';
 
 const BannerForm = ({ banner, onSubmit, onCancel }) => {
@@ -147,6 +148,14 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
     }));
   };
 
+  const handleGeneratePlaceholder = () => {
+    const placeholder = getRandomPlaceholder('banner');
+    setFormData(prev => ({
+      ...prev,
+      imageUrl: placeholder
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -220,7 +229,27 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
           <h3>🔗 URLs</h3>
 
           <div className="form-group">
-            <label className="form-label required">URL de la Imagen</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label className="form-label required">URL de la Imagen</label>
+              <button
+                type="button"
+                onClick={handleGeneratePlaceholder}
+                style={{
+                  padding: '6px 12px',
+                  background: '#17a2b8',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <RefreshCw size={14} /> Generar imagen
+              </button>
+            </div>
             <input
               type="url"
               className={`form-input ${errors.imageUrl ? 'error' : ''}`}
@@ -237,7 +266,7 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
                   src={formData.imageUrl}
                   alt="Vista previa"
                   onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="150"%3E%3Crect fill="%23f0f0f0" width="400" height="150"/%3E%3Ctext x="50%" y="50%" font-size="16" fill="%23999" text-anchor="middle" dy=".3em"%3EError cargando imagen%3C/text%3E%3C/svg%3E';
+                    e.target.src = getSvgPlaceholder(400, 150);
                   }}
                 />
               </div>

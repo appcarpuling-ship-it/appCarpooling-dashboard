@@ -1,5 +1,6 @@
 import React from 'react';
 import { Eye, MousePointer, BarChart3, Percent } from 'lucide-react';
+import { getSvgPlaceholder } from '../../constants/placeholders';
 import '../../styles/components/BannerStats.css';
 
 const BannerStats = ({ stats, banners }) => {
@@ -98,7 +99,7 @@ const BannerStats = ({ stats, banners }) => {
                         src={banner.imageUrl}
                         alt={banner.title}
                         onError={(e) => {
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Crect fill="%23f0f0f0" width="40" height="40"/%3E%3Ctext x="50%" y="50%" font-size="10" fill="%23999" text-anchor="middle" dy=".3em"%3E?%3C/text%3E%3C/svg%3E';
+                          e.target.src = getSvgPlaceholder(40, 40);
                         }}
                       />
                     </div>
