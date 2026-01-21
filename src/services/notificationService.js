@@ -35,5 +35,17 @@ export const notificationService = {
   clearRead: async () => {
     const response = await api.delete('/notifications/clear-read')
     return response.data
+  },
+
+  // Send bulk notification (admin only)
+  sendBulk: async (data) => {
+    const response = await api.post('/notifications/send-bulk', data)
+    return response.data
+  },
+
+  // Send single notification to specific user (admin only)
+  sendSingle: async (data) => {
+    const response = await api.post('/notifications/send-single', data)
+    return response.data
   }
 }

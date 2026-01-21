@@ -21,7 +21,8 @@ import {
   AlertTriangle,
   User,
   Car,
-  DollarSign
+  DollarSign,
+  Send
 } from 'lucide-react'
 
 const Notifications = () => {
@@ -35,6 +36,15 @@ const Notifications = () => {
   const [selectedNotification, setSelectedNotification] = useState(null)
   const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const [showSendModal, setShowSendModal] = useState(false)
+  const [sendFormData, setSendFormData] = useState({
+    title: '',
+    message: '',
+    recipientType: 'bulk', // 'bulk' o 'single'
+    province: '',
+    city: '',
+    userId: ''
+  })
 
   const queryClient = useQueryClient()
 
@@ -96,6 +106,42 @@ const Notifications = () => {
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Error al eliminar notificaciones leídas')
+    }
+  })
+
+  const sendNotificationMutation = useMutation({
+    mutationFn: (data) => {
+      if (data.recipientType === 'single') {
+        return notificationService.sendSingle({
+          userId: data.userId,
+          title: data.title,
+          message: data.message
+        })
+      } else {
+        return notificationService.sendBulk({
+          title: data.title,
+          message: data.message,
+          province: data.province || undefined,
+          city: data.city || undefined
+        })
+      }
+    },
+    onSuccess: (response) => {
+      queryClient.invalidateQueries(['notifications'])
+      queryClient.invalidateQueries(['notifications-unread-count'])
+      toast.success(response.data?.message || 'Notificación enviada exitosamente')
+      setShowSendModal(false)
+      setSendFormData({
+        title: '',
+        message: '',
+        recipientType: 'bulk',
+        province: '',
+        city: '',
+        userId: ''
+      })
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Error al enviar notificación')
     }
   })
 
@@ -204,6 +250,13 @@ const Notifications = () => {
           )}
         </div>
         <div className="flex gap-4">
+          <Button
+            variant="primary"
+            icon={<Send className="w-4 h-4" />}
+            onClick={() => setShowSendModal(true)}
+          >
+            Enviar Notificación
+          </Button>
           <Button
             variant="outline"
             icon={<Trash2 className="w-4 h-4" />}
@@ -427,6 +480,172 @@ const Notifications = () => {
           )}
         </Card.Content>
       </Card>
+
+      {/* Send Notification Modal */}
+      <Modal
+        isOpen={showSendModal}
+        onClose={() => {
+          setShowSendModal(false)
+          setSendFormData({
+            title: '',
+            message: '',
+            recipientType: 'bulk',
+            province: '',
+            city: '',
+            userId: ''
+          })
+        }}
+        size="lg"
+      >
+        <Modal.Content>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Enviar Notificación</h3>
+
+            <div className="space-y-4">
+              {/* Recipient Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de Destinatario
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={sendFormData.recipientType}
+                  onChange={(e) => setSendFormData(prev => ({
+                    ...prev,
+                    recipientType: e.target.value,
+                    province: '',
+                    city: '',
+                    userId: ''
+                  }))}
+                >
+                  <option value="bulk">A Múltiples Usuarios (por ubicación)</option>
+                  <option value="single">A Un Usuario Específico</option>
+                </select>
+              </div>
+
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Título
+                </label>
+                <Input
+                  placeholder="Ej: 🎉 Oferta Especial"
+                  value={sendFormData.title}
+                  onChange={(e) => setSendFormData(prev => ({ ...prev, title: e.target.value }))}
+                  maxLength={100}
+                />
+                <p className="text-xs text-gray-500 mt-1">{sendFormData.title.length}/100</p>
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mensaje
+                </label>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  placeholder="Ingresa el mensaje de la notificación..."
+                  rows="4"
+                  value={sendFormData.message}
+                  onChange={(e) => setSendFormData(prev => ({ ...prev, message: e.target.value }))}
+                  maxLength={500}
+                />
+                <p className="text-xs text-gray-500 mt-1">{sendFormData.message.length}/500</p>
+              </div>
+
+              {/* Bulk Recipients Options */}
+              {sendFormData.recipientType === 'bulk' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Provincia (Opcional)
+                    </label>
+                    <Input
+                      placeholder="Ej: Buenos Aires, Córdoba..."
+                      value={sendFormData.province}
+                      onChange={(e) => setSendFormData(prev => ({ ...prev, province: e.target.value }))}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Déjalo vacío para enviar a todos</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ciudad (Opcional)
+                    </label>
+                    <Input
+                      placeholder="Ej: Capital Federal, Mendoza..."
+                      value={sendFormData.city}
+                      onChange={(e) => setSendFormData(prev => ({ ...prev, city: e.target.value }))}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Single Recipient Options */}
+              {sendFormData.recipientType === 'single' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    User ID
+                  </label>
+                  <Input
+                    placeholder="Pega el ID del usuario aquí"
+                    value={sendFormData.userId}
+                    onChange={(e) => setSendFormData(prev => ({ ...prev, userId: e.target.value }))}
+                  />
+                </div>
+              )}
+
+              {/* Info Box */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-xs text-blue-800">
+                  <strong>ℹ️ Nota:</strong> La notificación se enviará a todos los usuarios que tengan tokens de push configurados.
+                  Se creará un registro en la base de datos y se enviará una push notification.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Modal.Content>
+        <Modal.Footer>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowSendModal(false)
+              setSendFormData({
+                title: '',
+                message: '',
+                recipientType: 'bulk',
+                province: '',
+                city: '',
+                userId: ''
+              })
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            icon={<Send className="w-4 h-4" />}
+            onClick={() => {
+              if (!sendFormData.title.trim()) {
+                toast.error('El título es requerido')
+                return
+              }
+              if (!sendFormData.message.trim()) {
+                toast.error('El mensaje es requerido')
+                return
+              }
+              if (sendFormData.recipientType === 'single' && !sendFormData.userId.trim()) {
+                toast.error('El User ID es requerido')
+                return
+              }
+              sendNotificationMutation.mutate(sendFormData)
+            }}
+            loading={sendNotificationMutation.isLoading}
+          >
+            Enviar Notificación
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Notification Details Modal */}
       <Modal
