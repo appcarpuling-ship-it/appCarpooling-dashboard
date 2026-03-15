@@ -9,6 +9,9 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
     description: '',
     imageUrl: '',
     clickUrl: '',
+    buttonText: '',
+    webGoTo: '',
+    appGoTo: '',
     order: 0,
     type: 'banner',
     campaignPeriod: { startDate: '', endDate: '' },
@@ -330,6 +333,65 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
               placeholder="https://ejemplo.com"
             />
             {errors.clickUrl && <span className="error-message">{errors.clickUrl}</span>}
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              Para enlaces externos. Si usas botón con Web/App GoTo, este campo es opcional.
+            </p>
+          </div>
+
+          {/* Botón opcional */}
+          <div className="form-section" style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #eee' }}>
+            <h4 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>🔘 Botón opcional</h4>
+            <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+              Si completás el texto del botón, se mostrará un CTA. Definí a dónde lleva en web y/o app.
+            </p>
+            <div className="form-group">
+              <label className="form-label">Texto del botón</label>
+              <input
+                type="text"
+                className="form-input"
+                name="buttonText"
+                value={formData.buttonText || ''}
+                onChange={handleInputChange}
+                placeholder="Ej: Crear viaje, Ver viajes, Mis reservas"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Web GoTo (ruta en la web)</label>
+              <select
+                className="form-select"
+                name="webGoTo"
+                value={formData.webGoTo || ''}
+                onChange={handleInputChange}
+              >
+                <option value="">— Sin navegación web —</option>
+                <option value="/trips/create">Crear viaje</option>
+                <option value="/trips/search">Buscar viajes</option>
+                <option value="/my-trips">Mis viajes</option>
+                <option value="/bookings">Mis reservas</option>
+                <option value="/seat-reservations">Reservas de asiento</option>
+                <option value="/profile">Mi perfil</option>
+                <option value="/">Inicio</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">App GoTo (pantalla en la app móvil)</label>
+              <select
+                className="form-select"
+                name="appGoTo"
+                value={formData.appGoTo || ''}
+                onChange={handleInputChange}
+              >
+                <option value="">— Sin navegación app —</option>
+                <option value="create_trip">Crear viaje</option>
+                <option value="all_trips">Ver todos los viajes</option>
+                <option value="search_trips">Buscar viajes</option>
+                <option value="my_trips">Mis viajes</option>
+                <option value="my_bookings">Mis reservas</option>
+                <option value="my_seat_reservations">Reservas de asiento</option>
+                <option value="profile">Mi perfil</option>
+                <option value="home">Inicio</option>
+              </select>
+            </div>
           </div>
 
           {/* Imágenes Adicionales */}
