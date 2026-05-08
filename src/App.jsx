@@ -20,6 +20,7 @@ import Commissions from './pages/Commissions'
 import Chat from './pages/Chat'
 import Banners from './pages/Banners'
 import Notifications from './pages/Notifications'
+import NewsPage from './pages/News'
 import Analytics from './pages/Analytics'
 import Settings from './pages/Settings'
 
@@ -56,6 +57,7 @@ function App() {
         <Route path="commissions" element={<Commissions />} />
         <Route path="chat" element={<Chat />} />
         <Route path="banners" element={<Banners />} />
+        <Route path="news" element={<NewsPage />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="settings" element={<Settings />} />
