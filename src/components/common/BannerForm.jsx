@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, X, RefreshCw, Trash2, Plus } from 'lucide-react';
 import { getRandomPlaceholder, getSvgPlaceholder } from '../../constants/placeholders';
+import { sanitizeImageUrl } from '../../utils/imageUtils';
 import '../../styles/components/BannerForm.css';
 
 const BannerForm = ({ banner, onSubmit, onCancel }) => {
@@ -312,7 +313,7 @@ const BannerForm = ({ banner, onSubmit, onCancel }) => {
             {formData.imageUrl && (
               <div className="image-preview">
                 <img
-                  src={formData.imageUrl}
+                  src={sanitizeImageUrl(formData.imageUrl) || formData.imageUrl}
                   alt="Vista previa"
                   onError={(e) => {
                     e.target.src = getSvgPlaceholder(400, 150);

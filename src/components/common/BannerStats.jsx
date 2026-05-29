@@ -1,6 +1,7 @@
 import React from 'react';
 import { Eye, MousePointer, BarChart3, Percent } from 'lucide-react';
 import { getSvgPlaceholder } from '../../constants/placeholders';
+import { sanitizeImageUrl } from '../../utils/imageUtils';
 import '../../styles/components/BannerStats.css';
 
 const BannerStats = ({ stats, banners }) => {
@@ -96,7 +97,7 @@ const BannerStats = ({ stats, banners }) => {
                   <div className="col-title">
                     <div className="banner-thumbnail">
                       <img
-                        src={banner.imageUrl}
+                        src={sanitizeImageUrl(banner.imageUrl) || banner.imageUrl}
                         alt={banner.title}
                         onError={(e) => {
                           e.target.src = getSvgPlaceholder(40, 40);

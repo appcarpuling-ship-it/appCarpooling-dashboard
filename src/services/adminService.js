@@ -69,5 +69,17 @@ export const adminService = {
       const response = await api.put(`/admin/bookings/${bookingId}/cancel`, { reason })
       return response.data
     }
-  }
+  },
+
+  userReports: {
+    getAll: async (params = {}) => {
+      const response = await api.get('/admin/user-reports', { params })
+      return response.data
+    },
+
+    updateStatus: async (reportId, status) => {
+      const response = await api.patch(`/admin/user-reports/${reportId}`, { status })
+      return response.data
+    },
+  },
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Edit, Trash2, ToggleRight, ToggleLeft, GripVertical } from 'lucide-react';
 import { getSvgPlaceholder } from '../../constants/placeholders';
+import { sanitizeImageUrl } from '../../utils/imageUtils';
 import '../../styles/components/BannerList.css';
 
 const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) => {
@@ -69,7 +70,7 @@ const BannerList = ({ banners, onToggleStatus, onEdit, onDelete, onReorder }) =>
             {/* Imagen del banner */}
             <div className="banner-image">
               <img
-                src={banner.imageUrl}
+                src={sanitizeImageUrl(banner.imageUrl) || banner.imageUrl}
                 alt={banner.title}
                 onError={(e) => {
                   e.target.src = getSvgPlaceholder(150, 80);
