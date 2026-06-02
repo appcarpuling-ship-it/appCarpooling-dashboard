@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, Table, Button, Input, Modal, Badge, Loading } from '../components/common'
-import { adminService, tripService } from '../services'
+import { Card, Table, Button, Input, Badge, Loading } from '../components/common'
+import { adminService } from '../services'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -27,11 +28,8 @@ const Trips = () => {
     page: 1,
     limit: 10
   })
-  const [selectedTrip, setSelectedTrip] = useState(null)
-  const [showTripModal, setShowTripModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
-  const [cancelReason, setCancelReason] = useState('')
-
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   // Fetch trips with filters
@@ -41,29 +39,6 @@ const Trips = () => {
     keepPreviousData: true
   })
 
-  // Mutations
-  const cancelTripMutation = useMutation({
-    mutationFn: ({ tripId, reason }) => adminService.trips.cancel(tripId, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin-trips'])
-      toast.success('Viaje cancelado exitosamente')
-      setCancelReason('')
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al cancelar viaje')
-    }
-  })
-
-  const deleteTripMutation = useMutation({
-    mutationFn: adminService.trips.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin-trips'])
-      toast.success('Viaje eliminado exitosamente')
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Error al eliminar viaje')
-    }
-  })
 
   const handleSearch = (e) => {
     setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))
@@ -77,23 +52,6 @@ const Trips = () => {
     setFilters(prev => ({ ...prev, page }))
   }
 
-  const viewTripDetails = async (tripId) => {
-    try {
-      const trip = await tripService.getById(tripId)
-      setSelectedTrip(trip.data)
-      setShowTripModal(true)
-    } catch (error) {
-      toast.error('Error al cargar detalles del viaje')
-    }
-  }
-
-  const handleCancelTrip = (tripId) => {
-    if (!cancelReason.trim()) {
-      toast.error('Debe proporcionar un motivo para cancelar el viaje')
-      return
-    }
-    cancelTripMutation.mutate({ tripId, reason: cancelReason })
-  }
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -331,23 +289,8 @@ const Trips = () => {
                             variant="outline"
                             size="sm"
                             icon={<Eye className="w-4 h-4" />}
-                            onClick={() => viewTripDetails(trip._id)}
+                            onClick={() => navigate(`/trips/${trip._id}`)}
                           />
-                          {trip.status === 'active' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              icon={<X className="w-4 h-4" />}
-                              onClick={() => {
-                                const reason = prompt('Motivo de cancelación:')
-                                if (reason) {
-                                  setCancelReason(reason)
-                                  handleCancelTrip(trip._id)
-                                }
-                              }}
-                              loading={cancelTripMutation.isLoading}
-                            />
-                          )}
                         </div>
                       </Table.Cell>
                     </Table.Row>
@@ -395,158 +338,6 @@ const Trips = () => {
         </Card.Content>
       </Card>
 
-      {/* Trip Details Modal */}
-      <Modal
-        isOpen={showTripModal}
-        onClose={() => {
-          setShowTripModal(false)
-          setSelectedTrip(null)
-        }}
-        size="xl"
-      >
-        <Modal.Content>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Detalles del Viaje
-            </h3>
-            {selectedTrip && (
-              <div className="space-y-6">
-                {/* Driver Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Conductor</h4>
-                  <div className="flex items-center space-x-4">
-                    {selectedTrip.driver?.avatar ? (
-                      <img
-                        src={selectedTrip.driver.avatar}
-                        alt={selectedTrip.driver.firstName}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <Car className="w-6 h-6 text-gray-600" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium">
-                        {selectedTrip.driver?.firstName} {selectedTrip.driver?.lastName}
-                      </p>
-                      <p className="text-sm text-gray-600">{selectedTrip.driver?.email}</p>
-                      <p className="text-sm text-gray-600">
-                        Rating: {selectedTrip.driver?.rating?.toFixed(1)} ★
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Trip Details */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Información del Viaje</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Estado</label>
-                        <div className="mt-1">{getStatusBadge(selectedTrip.status)}</div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Fecha y Hora</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {format(new Date(selectedTrip.departureDate), 'dd/MM/yyyy', { locale: es })} - {selectedTrip.departureTime}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Asientos Disponibles</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedTrip.availableSeats}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Precio por Asiento</label>
-                        <p className="mt-1 text-sm text-gray-900">{formatPrice(selectedTrip.pricePerSeat)}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Ruta</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Origen</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {selectedTrip.origin?.address}, {selectedTrip.origin?.city}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Destino</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {selectedTrip.destination?.address}, {selectedTrip.destination?.city}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Vehicle Info */}
-                {selectedTrip.vehicle && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-3">Vehículo</h4>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Marca y Modelo</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {selectedTrip.vehicle.make} {selectedTrip.vehicle.model}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Color</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedTrip.vehicle.color}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Patente</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedTrip.vehicle.licensePlate}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Description */}
-                {selectedTrip.description && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Descripción</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedTrip.description}</p>
-                  </div>
-                )}
-
-                {/* Timestamps */}
-                <div className="border-t pt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {format(new Date(selectedTrip.createdAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Última Actualización</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {format(new Date(selectedTrip.updatedAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </Modal.Content>
-        <Modal.Footer>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowTripModal(false)
-              setSelectedTrip(null)
-            }}
-          >
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   )
 }

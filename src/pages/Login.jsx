@@ -5,9 +5,13 @@ import { useAuthStore } from '../context/authStore'
 import { Lock, Mail, Eye, EyeOff, LogIn } from 'lucide-react'
 import toast from 'react-hot-toast'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [seeding, setSeeding] = useState(false)
+  const [seedMsg, setSeedMsg] = useState('')
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -25,8 +29,29 @@ const Login = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm()
+
+  const handleSeedAdmin = async () => {
+    setSeeding(true)
+    setSeedMsg('')
+    try {
+      const res = await fetch(`${API_URL}/auth/seed-admin`, { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        setValue('email', data.data.email)
+        setValue('password', data.data.password)
+        setSeedMsg('Admin creado. Credenciales cargadas.')
+      } else {
+        setSeedMsg(data.message)
+      }
+    } catch {
+      setSeedMsg('Error al conectar con el servidor.')
+    } finally {
+      setSeeding(false)
+    }
+  }
 
   const onSubmit = async (data) => {
     setIsLoading(true)
@@ -143,6 +168,23 @@ const Login = () => {
             </button>
           </div>
         </form>
+
+        {/* Seed admin */}
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={handleSeedAdmin}
+            disabled={seeding}
+            className="text-xs text-gray-400 hover:text-gray-600 underline"
+          >
+            {seeding ? 'Creando...' : 'Crear superadmin (setup inicial)'}
+          </button>
+          {seedMsg && (
+            <p className={`mt-2 text-xs font-mono ${seedMsg.includes('creado') ? 'text-green-600' : 'text-red-500'}`}>
+              {seedMsg}
+            </p>
+          )}
+        </div>
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">

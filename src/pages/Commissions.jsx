@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, Table, Button, Input, Modal, Badge, Loading } from '../components/common'
+import { Card, Table, Button, Input, Badge, Loading } from '../components/common'
 import { commissionService } from '../services'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -31,9 +32,8 @@ const Commissions = () => {
     page: 1,
     limit: 10
   })
-  const [selectedCommission, setSelectedCommission] = useState(null)
-  const [showCommissionModal, setShowCommissionModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const navigate = useNavigate()
 
   const queryClient = useQueryClient()
 
@@ -95,16 +95,6 @@ const Commissions = () => {
 
   const handlePageChange = (page) => {
     setFilters(prev => ({ ...prev, page }))
-  }
-
-  const viewCommissionDetails = async (commissionId) => {
-    try {
-      const commission = await commissionService.getById(commissionId)
-      setSelectedCommission(commission.data)
-      setShowCommissionModal(true)
-    } catch (error) {
-      toast.error('Error al cargar detalles de la comisión')
-    }
   }
 
   const handleWaiveCommission = (commissionId) => {
@@ -448,7 +438,7 @@ const Commissions = () => {
                             variant="outline"
                             size="sm"
                             icon={<Eye className="w-4 h-4" />}
-                            onClick={() => viewCommissionDetails(commission._id)}
+                            onClick={() => navigate(`/commissions/${commission._id}`)}
                           />
                           {commission.status === 'pending' && (
                             <Button
@@ -506,150 +496,6 @@ const Commissions = () => {
         </Card.Content>
       </Card>
 
-      {/* Commission Details Modal */}
-      <Modal
-        isOpen={showCommissionModal}
-        onClose={() => {
-          setShowCommissionModal(false)
-          setSelectedCommission(null)
-        }}
-        size="xl"
-      >
-        <Modal.Content>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Detalles de la Comisión
-            </h3>
-            {selectedCommission && (
-              <div className="space-y-6">
-                {/* Commission Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Información de la Comisión</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">ID de Comisión</label>
-                      <p className="mt-1 text-sm text-gray-900">{selectedCommission._id}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Estado</label>
-                      <div className="mt-1">{getStatusBadge(selectedCommission.status)}</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Período</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {selectedCommission.month}/{selectedCommission.year}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Monto</label>
-                      <p className="mt-1 text-sm text-gray-900 font-bold">
-                        {formatPrice(selectedCommission.amount)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Total de Viajes</label>
-                      <p className="mt-1 text-sm text-gray-900">{selectedCommission.totalTrips || 0}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {selectedCommission.dueDate ?
-                          format(new Date(selectedCommission.dueDate), 'dd/MM/yyyy', { locale: es })
-                          : 'N/A'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Driver Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Conductor</h4>
-                  <div className="flex items-center space-x-4">
-                    {selectedCommission.driver?.avatar ? (
-                      <img
-                        src={selectedCommission.driver.avatar}
-                        alt={selectedCommission.driver.firstName}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <Car className="w-6 h-6 text-gray-600" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium">
-                        {selectedCommission.driver?.firstName} {selectedCommission.driver?.lastName}
-                      </p>
-                      <p className="text-sm text-gray-600">{selectedCommission.driver?.email}</p>
-                      <p className="text-sm text-gray-600">{selectedCommission.driver?.phone}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Info */}
-                {selectedCommission.paymentMethod && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-3">Información de Pago</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Método de Pago</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedCommission.paymentMethod}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Fecha de Pago</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {selectedCommission.paidAt ?
-                            format(new Date(selectedCommission.paidAt), 'dd/MM/yyyy HH:mm', { locale: es })
-                            : 'N/A'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Description/Reason */}
-                {selectedCommission.description && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Descripción</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedCommission.description}</p>
-                  </div>
-                )}
-
-                {/* Timestamps */}
-                <div className="border-t pt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {format(new Date(selectedCommission.createdAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Última Actualización</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {format(new Date(selectedCommission.updatedAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </Modal.Content>
-        <Modal.Footer>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowCommissionModal(false)
-              setSelectedCommission(null)
-            }}
-          >
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   )
 }

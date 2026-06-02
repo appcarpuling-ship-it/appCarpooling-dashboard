@@ -13,12 +13,19 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Stats from './pages/Stats'
 import Users from './pages/Users'
+import UserDetail from './pages/UserDetail'
+import TripDetail from './pages/TripDetail'
+import BookingDetail from './pages/BookingDetail'
+import PaymentDetail from './pages/PaymentDetail'
+import CommissionDetail from './pages/CommissionDetail'
+import NotificationDetail from './pages/NotificationDetail'
 import Trips from './pages/Trips'
 import Bookings from './pages/Bookings'
 import Payments from './pages/Payments'
 import Commissions from './pages/Commissions'
 import Chat from './pages/Chat'
 import Banners from './pages/Banners'
+import NewsPage from './pages/News'
 import Notifications from './pages/Notifications'
 import UserReports from './pages/UserReports'
 import Analytics from './pages/Analytics'
@@ -51,7 +58,13 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="stats" element={<Stats />} />
         <Route path="users" element={<Users />} />
+        <Route path="users/:id" element={<UserDetail />} />
         <Route path="trips" element={<Trips />} />
+        <Route path="trips/:id" element={<TripDetail />} />
+        <Route path="bookings/:id" element={<BookingDetail />} />
+        <Route path="payments/:id" element={<PaymentDetail />} />
+        <Route path="commissions/:id" element={<CommissionDetail />} />
+        <Route path="notifications/:id" element={<NotificationDetail />} />
         <Route path="bookings" element={<Bookings />} />
         <Route path="payments" element={<Payments />} />
         <Route path="commissions" element={<Commissions />} />

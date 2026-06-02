@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, Table, Button, Input, Modal, Badge, Loading } from '../components/common'
 import { notificationService } from '../services'
@@ -33,9 +34,8 @@ const Notifications = () => {
     page: 1,
     limit: 20
   })
-  const [selectedNotification, setSelectedNotification] = useState(null)
-  const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const navigate = useNavigate()
   const [showSendModal, setShowSendModal] = useState(false)
   const [sendFormData, setSendFormData] = useState({
     title: '',
@@ -158,13 +158,10 @@ const Notifications = () => {
   }
 
   const viewNotificationDetails = (notification) => {
-    setSelectedNotification(notification)
-    setShowNotificationModal(true)
-
-    // Mark as read if unread
     if (!notification.isRead) {
       markAsReadMutation.mutate(notification._id)
     }
+    navigate(`/notifications/${notification._id}`, { state: { notification } })
   }
 
   const handleMarkAsRead = (notificationId) => {
@@ -647,83 +644,6 @@ const Notifications = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Notification Details Modal */}
-      <Modal
-        isOpen={showNotificationModal}
-        onClose={() => {
-          setShowNotificationModal(false)
-          setSelectedNotification(null)
-        }}
-        size="lg"
-      >
-        <Modal.Content>
-          <div className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              {selectedNotification && getTypeIcon(selectedNotification.type)}
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {selectedNotification?.title}
-                </h3>
-                {selectedNotification && getTypeBadge(selectedNotification.type)}
-              </div>
-            </div>
-
-            {selectedNotification && (
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Mensaje</h4>
-                  <p className="text-sm text-gray-900 leading-relaxed">
-                    {selectedNotification.message}
-                  </p>
-                </div>
-
-                {selectedNotification.actionUrl && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Acción</h4>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => {
-                        window.open(selectedNotification.actionUrl, '_blank')
-                      }}
-                    >
-                      Ir a la acción
-                    </Button>
-                  </div>
-                )}
-
-                <div className="border-t pt-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Fecha:</span>
-                      <p className="font-medium">
-                        {format(new Date(selectedNotification.createdAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Estado:</span>
-                      <p className="font-medium">
-                        {selectedNotification.isRead ? 'Leída' : 'No leída'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </Modal.Content>
-        <Modal.Footer>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowNotificationModal(false)
-              setSelectedNotification(null)
-            }}
-          >
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   )
 }

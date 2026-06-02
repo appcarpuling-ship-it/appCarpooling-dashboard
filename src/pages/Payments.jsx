@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, Table, Button, Input, Modal, Badge, Loading } from '../components/common'
+import { Card, Table, Button, Input, Badge, Loading } from '../components/common'
 import { paymentService } from '../services'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -31,9 +32,8 @@ const Payments = () => {
     page: 1,
     limit: 10
   })
-  const [selectedPayment, setSelectedPayment] = useState(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const navigate = useNavigate()
 
   const queryClient = useQueryClient()
 
@@ -92,11 +92,6 @@ const Payments = () => {
 
   const handlePageChange = (page) => {
     setFilters(prev => ({ ...prev, page }))
-  }
-
-  const viewPaymentDetails = (payment) => {
-    setSelectedPayment(payment)
-    setShowPaymentModal(true)
   }
 
   const handleConfirmPayment = (paymentId) => {
@@ -399,7 +394,7 @@ const Payments = () => {
                             variant="outline"
                             size="sm"
                             icon={<Eye className="w-4 h-4" />}
-                            onClick={() => viewPaymentDetails(payment)}
+                            onClick={() => navigate(`/payments/${payment._id}`, { state: { payment } })}
                           />
                           {payment.status === 'pending' && (
                             <Button
@@ -432,122 +427,6 @@ const Payments = () => {
         </Card.Content>
       </Card>
 
-      {/* Payment Details Modal */}
-      <Modal
-        isOpen={showPaymentModal}
-        onClose={() => {
-          setShowPaymentModal(false)
-          setSelectedPayment(null)
-        }}
-        size="xl"
-      >
-        <Modal.Content>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Detalles del Pago
-            </h3>
-            {selectedPayment && (
-              <div className="space-y-6">
-                {/* Payment Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Información del Pago</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">ID de Pago</label>
-                      <p className="mt-1 text-sm text-gray-900">{selectedPayment._id}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Estado</label>
-                      <div className="mt-1">{getStatusBadge(selectedPayment.status)}</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Método</label>
-                      <div className="mt-1">{getMethodBadge(selectedPayment.paymentMethod)}</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Monto</label>
-                      <p className="mt-1 text-sm text-gray-900 font-bold">
-                        {formatPrice(selectedPayment.amount)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* User Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Usuario</h4>
-                  <div className="flex items-center space-x-4">
-                    {selectedPayment.user?.avatar ? (
-                      <img
-                        src={selectedPayment.user.avatar}
-                        alt={selectedPayment.user.firstName}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-gray-600" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium">
-                        {selectedPayment.user?.firstName} {selectedPayment.user?.lastName}
-                      </p>
-                      <p className="text-sm text-gray-600">{selectedPayment.user?.email}</p>
-                      <p className="text-sm text-gray-600">{selectedPayment.user?.phone}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Booking Info */}
-                {selectedPayment.booking && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-3">Información de la Reserva</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">ID de Reserva</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedPayment.booking._id}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Asientos</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedPayment.booking.seatsBooked}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Timestamps */}
-                <div className="border-t pt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {format(new Date(selectedPayment.createdAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Última Actualización</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {format(new Date(selectedPayment.updatedAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </Modal.Content>
-        <Modal.Footer>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowPaymentModal(false)
-              setSelectedPayment(null)
-            }}
-          >
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, Table, Button, Input, Modal, Badge, Loading } from '../components/common'
+import { Card, Table, Button, Input, Badge, Loading } from '../components/common'
 import { adminService } from '../services'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -27,10 +28,8 @@ const Bookings = () => {
     page: 1,
     limit: 10
   })
-  const [selectedBooking, setSelectedBooking] = useState(null)
-  const [showBookingModal, setShowBookingModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
-
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   // Fetch bookings with filters
@@ -64,17 +63,6 @@ const Bookings = () => {
     setFilters(prev => ({ ...prev, page }))
   }
 
-  const viewBookingDetails = async (booking) => {
-    setSelectedBooking(booking)
-    setShowBookingModal(true)
-  }
-
-  const handleCancelBooking = (bookingId) => {
-    const reason = prompt('Motivo de cancelación:')
-    if (reason) {
-      cancelBookingMutation.mutate({ bookingId, reason })
-    }
-  }
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -304,17 +292,8 @@ const Bookings = () => {
                             variant="outline"
                             size="sm"
                             icon={<Eye className="w-4 h-4" />}
-                            onClick={() => viewBookingDetails(booking)}
+                            onClick={() => navigate(`/bookings/${booking._id}`)}
                           />
-                          {(booking.status === 'pending' || booking.status === 'confirmed') && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              icon={<X className="w-4 h-4" />}
-                              onClick={() => handleCancelBooking(booking._id)}
-                              loading={cancelBookingMutation.isLoading}
-                            />
-                          )}
                         </div>
                       </Table.Cell>
                     </Table.Row>
@@ -362,159 +341,6 @@ const Bookings = () => {
         </Card.Content>
       </Card>
 
-      {/* Booking Details Modal */}
-      <Modal
-        isOpen={showBookingModal}
-        onClose={() => {
-          setShowBookingModal(false)
-          setSelectedBooking(null)
-        }}
-        size="xl"
-      >
-        <Modal.Content>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Detalles de la Reserva
-            </h3>
-            {selectedBooking && (
-              <div className="space-y-6">
-                {/* Booking Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Información de la Reserva</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">ID de Reserva</label>
-                      <p className="mt-1 text-sm text-gray-900">{selectedBooking._id}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Estado</label>
-                      <div className="mt-1">{getStatusBadge(selectedBooking.status)}</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Asientos Reservados</label>
-                      <p className="mt-1 text-sm text-gray-900">{selectedBooking.seatsBooked}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Precio Total</label>
-                      <p className="mt-1 text-sm text-gray-900">{formatPrice(selectedBooking.totalPrice)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Passenger Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Pasajero</h4>
-                  <div className="flex items-center space-x-4">
-                    {selectedBooking.passenger?.avatar ? (
-                      <img
-                        src={selectedBooking.passenger.avatar}
-                        alt={selectedBooking.passenger.firstName}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-gray-600" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium">
-                        {selectedBooking.passenger?.firstName} {selectedBooking.passenger?.lastName}
-                      </p>
-                      <p className="text-sm text-gray-600">{selectedBooking.passenger?.email}</p>
-                      <p className="text-sm text-gray-600">{selectedBooking.passenger?.phone}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Trip Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Información del Viaje</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Origen</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {selectedBooking.trip?.origin?.address}, {selectedBooking.trip?.origin?.city}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Destino</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {selectedBooking.trip?.destination?.address}, {selectedBooking.trip?.destination?.city}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Fecha y Hora</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {format(new Date(selectedBooking.trip?.departureDate), 'dd/MM/yyyy', { locale: es })} - {selectedBooking.trip?.departureTime}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Precio por Asiento</label>
-                      <p className="mt-1 text-sm text-gray-900">{formatPrice(selectedBooking.trip?.pricePerSeat)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Driver Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Conductor</h4>
-                  <div className="flex items-center space-x-4">
-                    {selectedBooking.trip?.driver?.avatar ? (
-                      <img
-                        src={selectedBooking.trip.driver.avatar}
-                        alt={selectedBooking.trip.driver.firstName}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <Car className="w-6 h-6 text-gray-600" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium">
-                        {selectedBooking.trip?.driver?.firstName} {selectedBooking.trip?.driver?.lastName}
-                      </p>
-                      <p className="text-sm text-gray-600">{selectedBooking.trip?.driver?.email}</p>
-                      <p className="text-sm text-gray-600">
-                        Rating: {selectedBooking.trip?.driver?.rating?.toFixed(1)} ★
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Timestamps */}
-                <div className="border-t pt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Fecha de Reserva</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {format(new Date(selectedBooking.createdAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Última Actualización</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {format(new Date(selectedBooking.updatedAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </Modal.Content>
-        <Modal.Footer>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowBookingModal(false)
-              setSelectedBooking(null)
-            }}
-          >
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   )
 }

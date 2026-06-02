@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, Table, Button, Input, Modal, Badge, Loading } from '../components/common'
+import { Card, Table, Button, Input, Badge, Loading } from '../components/common'
 import { adminService } from '../services'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -23,9 +24,8 @@ const Users = () => {
     page: 1,
     limit: 10
   })
-  const [selectedUser, setSelectedUser] = useState(null)
-  const [showUserModal, setShowUserModal] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const navigate = useNavigate()
 
   const queryClient = useQueryClient()
 
@@ -82,15 +82,6 @@ const Users = () => {
     setFilters(prev => ({ ...prev, page }))
   }
 
-  const viewUserDetails = async (userId) => {
-    try {
-      const user = await adminService.users.getById(userId)
-      setSelectedUser(user.data)
-      setShowUserModal(true)
-    } catch (error) {
-      toast.error('Error al cargar detalles del usuario')
-    }
-  }
 
   const handleUserAction = (action, userId, reason = '') => {
     switch (action) {
@@ -108,7 +99,7 @@ const Users = () => {
 
   const getStatusBadge = (user) => {
     if (!user.isActive) return <Badge variant="danger">Inactivo</Badge>
-    if (!user.isVerified) return <Badge variant="warning">No verificado</Badge>
+    if (!user.verified) return <Badge variant="warning">No verificado</Badge>
     return <Badge variant="success">Activo</Badge>
   }
 
@@ -282,7 +273,7 @@ const Users = () => {
                       </Table.Cell>
                       <Table.Cell>
                         <p className="text-sm text-gray-900">
-                          {format(new Date(user.createdAt), 'dd/MM/yyyy', { locale: es })}
+                          {user.createdAt ? format(new Date(user.createdAt), 'dd/MM/yyyy', { locale: es }) : 'N/A'}
                         </p>
                       </Table.Cell>
                       <Table.Cell>
@@ -291,7 +282,7 @@ const Users = () => {
                             variant="outline"
                             size="sm"
                             icon={<Eye className="w-4 h-4" />}
-                            onClick={() => viewUserDetails(user._id)}
+                            onClick={() => navigate(`/users/${user._id}`)}
                           />
                           {user.isActive ? (
                             <Button
@@ -310,7 +301,7 @@ const Users = () => {
                               loading={activateUserMutation.isLoading}
                             />
                           )}
-                          {!user.isVerified && (
+                          {!user.verified && (
                             <Button
                               variant="primary"
                               size="sm"
@@ -361,134 +352,26 @@ const Users = () => {
               )}
             </>
           ) : (
-            <Table.Empty message="No se encontraron usuarios" />
+            <Table>
+              <Table.Header>
+                <Table.Row>
+                  <Table.Head>Usuario</Table.Head>
+                  <Table.Head>Ubicación</Table.Head>
+                  <Table.Head>Rating</Table.Head>
+                  <Table.Head>Viajes</Table.Head>
+                  <Table.Head>Estado</Table.Head>
+                  <Table.Head>Registro</Table.Head>
+                  <Table.Head>Acciones</Table.Head>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                <Table.Empty message="No se encontraron usuarios" />
+              </Table.Body>
+            </Table>
           )}
         </Card.Content>
       </Card>
 
-      {/* User Details Modal */}
-      <Modal
-        isOpen={showUserModal}
-        onClose={() => {
-          setShowUserModal(false)
-          setSelectedUser(null)
-        }}
-        size="lg"
-      >
-        <Modal.Content>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Detalles del Usuario
-            </h3>
-            {selectedUser && (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  {selectedUser.avatar ? (
-                    <img
-                      src={selectedUser.avatar}
-                      alt={selectedUser.firstName}
-                      className="w-16 h-16 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                      <User className="w-8 h-8 text-gray-600" />
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="text-xl font-bold">
-                      {selectedUser.firstName} {selectedUser.lastName}
-                    </h4>
-                    <p className="text-gray-600">{selectedUser.email}</p>
-                    {getStatusBadge(selectedUser)}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Teléfono
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {selectedUser.phone || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Edad
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {selectedUser.age || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Ciudad
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {selectedUser.city || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Provincia
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {selectedUser.province || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Rating
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {selectedUser.rating ? `${selectedUser.rating.toFixed(1)} ★` : 'Sin rating'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Total de Viajes
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {selectedUser.totalTrips || 0}
-                    </p>
-                  </div>
-                </div>
-
-                {selectedUser.bio && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Biografía
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {selectedUser.bio}
-                    </p>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Fecha de Registro
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {format(new Date(selectedUser.createdAt), 'dd/MM/yyyy HH:mm', { locale: es })}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </Modal.Content>
-        <Modal.Footer>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowUserModal(false)
-              setSelectedUser(null)
-            }}
-          >
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   )
 }

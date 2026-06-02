@@ -65,6 +65,11 @@ export const adminService = {
       return response.data
     },
 
+    getById: async (bookingId) => {
+      const response = await api.get(`/admin/bookings/${bookingId}`)
+      return response.data
+    },
+
     cancel: async (bookingId, reason) => {
       const response = await api.put(`/admin/bookings/${bookingId}/cancel`, { reason })
       return response.data
