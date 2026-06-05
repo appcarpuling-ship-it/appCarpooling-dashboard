@@ -1,270 +1,193 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Eye, BarChart3 } from 'lucide-react';
-import BannerForm from '../components/common/BannerForm';
-import BannerList from '../components/common/BannerList';
-import BannerStats from '../components/common/BannerStats';
-import bannerService from '../services/bannerService';
-import '../styles/pages/Banners.css';
+import { useState, useEffect } from 'react'
+import { Plus, Eye, BarChart3, X } from 'lucide-react'
+import BannerForm from '../components/common/BannerForm'
+import BannerList from '../components/common/BannerList'
+import BannerStats from '../components/common/BannerStats'
+import bannerService from '../services/bannerService'
+import toast from 'react-hot-toast'
+
+const PACKAGES = [
+  { id: 'free',       name: 'Free',       color: 'bg-slate-100 text-slate-600 hover:bg-slate-200' },
+  { id: 'premium',    name: 'Premium',    color: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' },
+  { id: 'vip',        name: 'VIP',        color: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
+  { id: 'enterprise', name: 'Enterprise', color: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
+]
+
+const ACTIVE_PKG = {
+  free:       'bg-slate-700 text-white',
+  premium:    'bg-indigo-600 text-white',
+  vip:        'bg-amber-500 text-white',
+  enterprise: 'bg-emerald-600 text-white',
+}
 
 const Banners = () => {
-  const [banners, setBanners] = useState([]);
-  const [selectedPackage, setSelectedPackage] = useState('free');
-  const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [editingBanner, setEditingBanner] = useState(null);
-  const [stats, setStats] = useState(null);
-  const [activeTab, setActiveTab] = useState('list'); // 'list' o 'stats'
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [banners,        setBanners]        = useState([])
+  const [selectedPkg,    setSelectedPkg]    = useState('free')
+  const [loading,        setLoading]        = useState(false)
+  const [showForm,       setShowForm]       = useState(false)
+  const [editingBanner,  setEditingBanner]  = useState(null)
+  const [stats,          setStats]          = useState(null)
+  const [activeTab,      setActiveTab]      = useState('list')
 
-  const packages = [
-    { id: 'free', name: 'Free', color: '#6c757d' },
-    { id: 'premium', name: 'Premium', color: '#007bff' },
-    { id: 'vip', name: 'VIP', color: '#ffc107' },
-    { id: 'enterprise', name: 'Enterprise', color: '#28a745' }
-  ];
-
-  // Cargar banners cuando cambia el paquete
-  useEffect(() => {
-    loadBanners();
-  }, [selectedPackage]);
-
-  // Cargar estadísticas
-  useEffect(() => {
-    if (activeTab === 'stats') {
-      loadStats();
-    }
-  }, [selectedPackage, activeTab]);
+  useEffect(() => { loadBanners() }, [selectedPkg])
+  useEffect(() => { if (activeTab === 'stats') loadStats() }, [selectedPkg, activeTab])
 
   const loadBanners = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await bannerService.getBannersByPackage(selectedPackage);
-      setBanners(response.data || []);
-      setError(null);
+      const res = await bannerService.getBannersByPackage(selectedPkg)
+      setBanners(res.data || [])
     } catch (err) {
-      setError('Error al cargar banners: ' + err.message);
-      console.error(err);
+      toast.error('Error al cargar banners: ' + err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const loadStats = async () => {
     try {
-      const response = await bannerService.getBannerStats(selectedPackage);
-      setStats(response.data);
-    } catch (err) {
-      console.error('Error al cargar estadísticas:', err);
-    }
-  };
+      const res = await bannerService.getBannerStats(selectedPkg)
+      setStats(res.data)
+    } catch { /* silent */ }
+  }
 
-  const handleCreateBanner = async (formData) => {
-    try {
-      const bannerData = {
-        ...formData,
-        packageId: selectedPackage
-      };
+  const handleCreate = async (formData) => {
+    await bannerService.createBanner({ ...formData, packageId: selectedPkg })
+    toast.success('Banner creado')
+    setShowForm(false)
+    loadBanners()
+  }
 
-      await bannerService.createBanner(bannerData);
-      setSuccess('Banner creado exitosamente');
-      setShowForm(false);
-      loadBanners();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError('Error al crear banner: ' + err.message);
-    }
-  };
+  const handleUpdate = async (id, formData) => {
+    await bannerService.updateBanner(id, formData)
+    toast.success('Banner actualizado')
+    setEditingBanner(null)
+    setShowForm(false)
+    loadBanners()
+  }
 
-  const handleUpdateBanner = async (id, formData) => {
-    try {
-      await bannerService.updateBanner(id, formData);
-      setSuccess('Banner actualizado exitosamente');
-      setEditingBanner(null);
-      setShowForm(false);
-      loadBanners();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError('Error al actualizar banner: ' + err.message);
-    }
-  };
+  const handleToggle = async (id) => {
+    await bannerService.toggleBannerStatus(id)
+    loadBanners()
+  }
 
-  const handleToggleStatus = async (id) => {
-    try {
-      await bannerService.toggleBannerStatus(id);
-      setSuccess('Estado del banner actualizado');
-      loadBanners();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError('Error al cambiar estado: ' + err.message);
-    }
-  };
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Eliminar este banner?')) return
+    await bannerService.deleteBanner(id)
+    toast.success('Banner eliminado')
+    loadBanners()
+  }
 
-  const handleDeleteBanner = async (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este banner?')) {
-      try {
-        await bannerService.deleteBanner(id);
-        setSuccess('Banner eliminado exitosamente');
-        loadBanners();
-        setTimeout(() => setSuccess(null), 3000);
-      } catch (err) {
-        setError('Error al eliminar banner: ' + err.message);
-      }
-    }
-  };
+  const handleReorder = async (reordered) => {
+    await bannerService.reorderBanners(selectedPkg, reordered.map(b => ({ id: b._id, order: b.order })))
+    loadBanners()
+  }
 
-  const handleReorder = async (reorderedBanners) => {
-    try {
-      const reorderData = reorderedBanners.map(banner => ({
-        id: banner._id,
-        order: banner.order
-      }));
+  const openCreate = () => { setEditingBanner(null); setShowForm(true) }
+  const openEdit   = (b)  => { setEditingBanner(b);  setShowForm(true) }
+  const closeForm  = ()   => { setShowForm(false);   setEditingBanner(null) }
 
-      await bannerService.reorderBanners(selectedPackage, reorderData);
-      setSuccess('Banners reordenados exitosamente');
-      loadBanners();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError('Error al reordenar: ' + err.message);
-    }
-  };
-
-  const handleEditBanner = (banner) => {
-    setEditingBanner(banner);
-    setShowForm(true);
-  };
-
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setEditingBanner(null);
-  };
-
-  const currentPackage = packages.find(p => p.id === selectedPackage);
+  const pkgLabel = PACKAGES.find(p => p.id === selectedPkg)?.name
 
   return (
-    <div className="banners-page">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="banners-header">
-        <h1>🎨 Gestión de Banners</h1>
-        <button
-          className="create-banner-btn"
-          onClick={() => {
-            setEditingBanner(null);
-            setShowForm(true);
-          }}
-        >
-          <Plus size={18} /> Crear Banner
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Banners</h1>
+          <p className="page-subtitle">Gestioná los banners por paquete de publicidad</p>
+        </div>
+        <button onClick={openCreate} className="btn btn-primary">
+          <Plus className="w-4 h-4" /> Nuevo banner
         </button>
       </div>
 
-      {/* Mensajes de éxito/error */}
-      {error && (
-        <div className="alert error">
-          {error}
-          <button className="alert-close" onClick={() => setError(null)}>×</button>
-        </div>
-      )}
-      {success && (
-        <div className="alert success">
-          {success}
-          <button className="alert-close" onClick={() => setSuccess(null)}>×</button>
-        </div>
-      )}
-
-      {/* Selector de paquete */}
-      <div className="package-selector">
-        {packages.map(pkg => (
-          <button
-            key={pkg.id}
-            className={`package-btn ${pkg.id} ${selectedPackage === pkg.id ? 'active' : ''}`}
-            onClick={() => setSelectedPackage(pkg.id)}
-          >
-            <span>{pkg.name}</span>
-            <span className="package-count">{banners.length} banner{banners.length !== 1 ? 's' : ''}</span>
+      {/* Package selector */}
+      <div className="flex gap-2 flex-wrap">
+        {PACKAGES.map(pkg => (
+          <button key={pkg.id}
+            onClick={() => setSelectedPkg(pkg.id)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all
+                        ${selectedPkg === pkg.id ? ACTIVE_PKG[pkg.id] : pkg.color}`}>
+            {pkg.name}
+            {selectedPkg === pkg.id && (
+              <span className="ml-1.5 opacity-75 text-xs">
+                {banners.length} {banners.length === 1 ? 'banner' : 'banners'}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="tabs-container">
-        <button
-          className={`tab-btn ${activeTab === 'list' ? 'active' : ''}`}
-          onClick={() => setActiveTab('list')}
-        >
-          <Eye size={18} /> Banners Activos
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
-          onClick={() => setActiveTab('stats')}
-        >
-          <BarChart3 size={18} /> Estadísticas
-        </button>
+      <div className="card p-1 flex gap-1 w-fit">
+        {[
+          { id: 'list',  label: 'Banners activos', icon: Eye },
+          { id: 'stats', label: 'Estadísticas',    icon: BarChart3 },
+        ].map(({ id, label, icon: Icon }) => (
+          <button key={id} onClick={() => setActiveTab(id)}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all
+                        ${activeTab === id ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            <Icon className="w-4 h-4" /> {label}
+          </button>
+        ))}
       </div>
 
-      {/* Contenido de tabs */}
-      <div className="tab-content">
-        {activeTab === 'list' ? (
-          <>
-            {loading && (
-              <div className="loading-state">
-                <div className="spinner" />
-                Cargando banners...
-              </div>
-            )}
-
-            {!loading && banners.length === 0 && (
-              <div className="empty-state" style={{ padding: '60px 20px', textAlign: 'center' }}>
-                <p style={{ fontSize: '16px', color: '#999' }}>
-                  📭 No hay banners en el paquete <strong>{currentPackage?.name}</strong>
-                </p>
-                <p style={{ fontSize: '13px', color: '#bbb', marginTop: '10px' }}>
-                  Crea tu primer banner para comenzar
-                </p>
-              </div>
-            )}
-
-            {!loading && banners.length > 0 && (
-              <BannerList
-                banners={banners}
-                onToggleStatus={handleToggleStatus}
-                onEdit={handleEditBanner}
-                onDelete={handleDeleteBanner}
-                onReorder={handleReorder}
-              />
-            )}
-          </>
+      {/* Content */}
+      {loading ? (
+        <div className="card p-16 flex flex-col items-center gap-3 text-slate-400">
+          <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-indigo-500 animate-spin" />
+          <span className="text-sm">Cargando…</span>
+        </div>
+      ) : activeTab === 'list' ? (
+        banners.length === 0 ? (
+          <div className="card p-16 flex flex-col items-center gap-3 text-slate-400">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
+              <Eye className="w-6 h-6 text-slate-300" />
+            </div>
+            <div className="text-center">
+              <p className="font-medium text-slate-600">Sin banners en {pkgLabel}</p>
+              <p className="text-sm mt-1">Creá el primer banner para este paquete</p>
+            </div>
+            <button onClick={openCreate} className="btn btn-primary mt-1">
+              <Plus className="w-4 h-4" /> Crear banner
+            </button>
+          </div>
         ) : (
-          <>
-            {loading ? (
-              <div className="loading-state">
-                <div className="spinner" />
-                Cargando estadísticas...
-              </div>
-            ) : (
-              <BannerStats stats={stats} banners={banners} />
-            )}
-          </>
-        )}
-      </div>
+          <BannerList banners={banners} onToggleStatus={handleToggle}
+            onEdit={openEdit} onDelete={handleDelete} onReorder={handleReorder} />
+        )
+      ) : (
+        <BannerStats stats={stats} banners={banners} />
+      )}
 
-      {/* Modal del formulario */}
+      {/* Modal */}
       {showForm && (
-        <div className="modal-overlay" onClick={handleCloseForm}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="form-header">
-              <h2>{editingBanner ? '✏️ Editar Banner' : '✨ Crear Banner'}</h2>
-              <button className="form-close-btn" onClick={handleCloseForm}>×</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+             onClick={closeForm}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
+               onClick={e => e.stopPropagation()}>
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h2 className="text-base font-semibold text-slate-900">
+                {editingBanner ? 'Editar banner' : 'Nuevo banner'}
+              </h2>
+              <button onClick={closeForm}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400
+                           hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
             <BannerForm
               banner={editingBanner}
-              onSubmit={editingBanner ? handleUpdateBanner : handleCreateBanner}
-              onCancel={handleCloseForm}
+              onSubmit={editingBanner ? handleUpdate : handleCreate}
+              onCancel={closeForm}
             />
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Banners;
+export default Banners
