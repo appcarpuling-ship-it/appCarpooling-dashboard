@@ -2,174 +2,133 @@ import { useState } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../context/authStore'
 import {
-  Home,
-  Users,
-  Car,
-  Calendar,
-  CreditCard,
-  MessageCircle,
-  Bell,
-  TrendingUp,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  BarChart3,
-  DollarSign,
-  Image,
-  Newspaper,
-  Flag,
+  Home, Users, Car, Calendar, CreditCard, MessageCircle, Bell,
+  TrendingUp, Settings, LogOut, Menu, X, BarChart3, DollarSign,
+  Image, Newspaper, Flag,
 } from 'lucide-react'
 
+const NAV = [
+  { name: 'Dashboard',      href: '/',              icon: Home },
+  { name: 'Estadísticas',   href: '/stats',          icon: BarChart3 },
+  { name: 'Usuarios',       href: '/users',          icon: Users },
+  { name: 'Viajes',         href: '/trips',          icon: Car },
+  { name: 'Reservas',       href: '/bookings',       icon: Calendar },
+  { name: 'Pagos',          href: '/payments',       icon: CreditCard },
+  { name: 'Comisiones',     href: '/commissions',    icon: DollarSign },
+  { name: 'Chat',           href: '/chat',           icon: MessageCircle },
+  { name: 'Banners',        href: '/banners',        icon: Image },
+  { name: 'Noticias',       href: '/news',           icon: Newspaper },
+  { name: 'Reportes',       href: '/user-reports',   icon: Flag },
+  { name: 'Notificaciones', href: '/notifications',  icon: Bell },
+  { name: 'Análisis',       href: '/analytics',      icon: TrendingUp },
+  { name: 'Configuración',  href: '/settings',       icon: Settings },
+]
+
 const Layout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [open, setOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
 
-  const navigationItems = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Estadísticas', href: '/stats', icon: BarChart3 },
-    { name: 'Usuarios', href: '/users', icon: Users },
-    { name: 'Viajes', href: '/trips', icon: Car },
-    { name: 'Reservas', href: '/bookings', icon: Calendar },
-    { name: 'Pagos', href: '/payments', icon: CreditCard },
-    { name: 'Comisiones', href: '/commissions', icon: DollarSign },
-    { name: 'Chat', href: '/chat', icon: MessageCircle },
-    { name: 'Banners', href: '/banners', icon: Image },
-    { name: 'Noticias', href: '/news', icon: Newspaper },
-    { name: 'Reportes usuarios', href: '/user-reports', icon: Flag },
-    { name: 'Notificaciones', href: '/notifications', icon: Bell },
-    { name: 'Análisis', href: '/analytics', icon: TrendingUp },
-    { name: 'Configuración', href: '/settings', icon: Settings },
-  ]
+  const isActive = (href) =>
+    href === '/' ? location.pathname === '/' : location.pathname.startsWith(href)
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+  const handleLogout = () => { logout(); navigate('/login') }
 
-  const isActive = (href) => {
-    if (href === '/') {
-      return location.pathname === '/'
-    }
-    return location.pathname.startsWith(href)
-  }
+  const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
-      >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <Car className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-lg font-semibold text-gray-900">Dashboard</span>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-1 rounded-md hover:bg-gray-100"
-            >
-              <X className="w-5 h-5" />
-            </button>
+  const Sidebar = () => (
+    <div className="flex flex-col h-full bg-slate-900">
+      {/* Logo */}
+      <div className="flex items-center justify-between h-14 px-4 border-b border-white/[0.07] shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0"
+               style={{ boxShadow: '0 0 16px rgba(99,102,241,0.5)' }}>
+            <Car className="w-4 h-4 text-white" />
           </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navigationItems.map((item) => {
-              const Icon = item.icon
-              const active = isActive(item.href)
-
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`sidebar-item ${active ? 'active' : ''}`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
-                </Link>
-              )
-            })}
-          </nav>
-
-          {/* User section */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.firstName}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-primary-600 font-medium">
-                    {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                  </span>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <LogOut className="w-5 h-5" />
-              <span>Cerrar Sesión</span>
-            </button>
-          </div>
+          <span className="text-white font-semibold text-[15px] tracking-tight">Carpuling</span>
         </div>
+        <button onClick={() => setOpen(false)}
+          className="lg:hidden p-1 rounded text-slate-500 hover:text-white hover:bg-white/10 transition-colors">
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* Main content */}
-      <div className="lg:ml-64">
-        {/* Top bar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-md hover:bg-gray-100"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        {NAV.map(({ name, href, icon: Icon }) => {
+          const active = isActive(href)
+          return (
+            <Link key={href} to={href}
+              className={`sidebar-item ${active ? 'active' : ''}`}
+              onClick={() => setOpen(false)}>
+              <Icon className="w-4.25 h-4.25 shrink-0" />
+              <span>{name}</span>
+            </Link>
+          )
+        })}
+      </nav>
 
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-600">
-              {new Date().toLocaleDateString('es-AR', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </div>
+      {/* User */}
+      <div className="p-3 border-t border-white/[0.07] shrink-0">
+        <div className="flex items-center gap-2.5 px-2 py-1.5 mb-1 rounded-lg">
+          <div className="w-7 h-7 rounded-full bg-indigo-500/25 flex items-center justify-center shrink-0">
+            {user?.avatar
+              ? <img src={user.avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+              : <span className="text-indigo-300 text-[11px] font-bold">{initials}</span>}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-medium text-white truncate leading-tight">
+              {user?.firstName} {user?.lastName}
+            </p>
+            <p className="text-[11px] text-slate-500 truncate leading-tight">{user?.email}</p>
+          </div>
+        </div>
+        <button onClick={handleLogout}
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-slate-400
+                     hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
+          <LogOut className="w-4 h-4 shrink-0" />
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Desktop sidebar */}
+      <aside className="fixed inset-y-0 left-0 z-50 w-56 hidden lg:block">
+        <Sidebar />
+      </aside>
+
+      {/* Mobile sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-56 lg:hidden transform transition-transform duration-200 ease-out
+                         ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+        <Sidebar />
+      </aside>
+
+      {/* Content */}
+      <div className="lg:ml-56 flex flex-col min-h-screen">
+        {/* Topbar */}
+        <header className="h-14 bg-white border-b border-slate-200 flex items-center px-5 gap-4 sticky top-0 z-40 shrink-0">
+          <button onClick={() => setOpen(true)}
+            className="lg:hidden p-2 -ml-1 rounded-lg hover:bg-slate-100 transition-colors">
+            <Menu className="w-5 h-5 text-slate-500" />
+          </button>
+          <div className="ml-auto text-[13px] text-slate-400 capitalize font-medium">
+            {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="p-6">
+        <main className="flex-1 p-6">
           <Outlet />
         </main>
       </div>
 
-      {/* Sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+      {/* Mobile overlay */}
+      {open && (
+        <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+             onClick={() => setOpen(false)} />
       )}
     </div>
   )

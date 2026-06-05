@@ -1,698 +1,364 @@
-import React, { useState, useEffect } from 'react';
-import { Save, X, RefreshCw, Trash2, Plus } from 'lucide-react';
-import { getRandomPlaceholder, getSvgPlaceholder } from '../../constants/placeholders';
-import { sanitizeImageUrl } from '../../utils/imageUtils';
-import '../../styles/components/BannerForm.css';
+import { useState, useEffect } from 'react'
+import { Save, X, ChevronDown, ChevronUp, Trash2, RefreshCw } from 'lucide-react'
+import { getRandomPlaceholder, getSvgPlaceholder } from '../../constants/placeholders'
+import { sanitizeImageUrl } from '../../utils/imageUtils'
+
+const APP_GOTO_OPTIONS = [
+  { value: '',                     label: '— Sin navegación —' },
+  { value: 'home',                 label: 'Inicio' },
+  { value: 'all_trips',            label: 'Ver todos los viajes' },
+  { value: 'search_trips',         label: 'Buscar viajes' },
+  { value: 'create_trip',          label: 'Crear viaje' },
+  { value: 'my_trips',             label: 'Mis viajes' },
+  { value: 'my_bookings',          label: 'Mis reservas' },
+  { value: 'my_seat_reservations', label: 'Reservas de asiento' },
+  { value: 'profile',              label: 'Mi perfil' },
+]
+
+const WEB_GOTO_OPTIONS = [
+  { value: '',                  label: '— Sin navegación —' },
+  { value: '/',                 label: 'Inicio' },
+  { value: '/trips/search',     label: 'Buscar viajes' },
+  { value: '/trips/create',     label: 'Crear viaje' },
+  { value: '/my-trips',         label: 'Mis viajes' },
+  { value: '/bookings',         label: 'Mis reservas' },
+  { value: '/seat-reservations',label: 'Reservas de asiento' },
+  { value: '/profile',          label: 'Mi perfil' },
+]
+
+const EMPTY = {
+  title: '', description: '', imageUrl: '', clickUrl: '',
+  buttonText: '', webGoTo: '', appGoTo: '', order: 0, type: 'banner',
+  campaignPeriod: { startDate: '', endDate: '' },
+  visibility: { userTypes: 'both', devices: 'both' },
+  metadata: { campaignName: '', category: '', tags: [], images: [] },
+}
+
+const Field = ({ label, error, children, hint }) => (
+  <div className="space-y-1.5">
+    <label className="block text-sm font-medium text-slate-700">{label}</label>
+    {children}
+    {hint  && <p className="text-xs text-slate-400">{hint}</p>}
+    {error && <p className="text-xs text-red-500">{error}</p>}
+  </div>
+)
+
+const Select = ({ value, onChange, options, name, className = '' }) => (
+  <select
+    name={name}
+    value={value}
+    onChange={onChange}
+    className={`input bg-white ${className}`}
+  >
+    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+  </select>
+)
 
 const BannerForm = ({ banner, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    imageUrl: '',
-    clickUrl: '',
-    buttonText: '',
-    webGoTo: '',
-    appGoTo: '',
-    order: 0,
-    type: 'banner',
-    campaignPeriod: { startDate: '', endDate: '' },
-    visibility: {
-      userTypes: 'both',
-      devices: 'both'
-    },
-    metadata: {
-      campaignName: '',
-      category: '',
-      tags: [],
-      images: [] // Array de imágenes adicionales
-    }
-  });
-
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [newTag, setNewTag] = useState('');
-  const [newImageUrl, setNewImageUrl] = useState('');
+  const [form, setForm]         = useState(EMPTY)
+  const [errors, setErrors]     = useState({})
+  const [loading, setLoading]   = useState(false)
+  const [advanced, setAdvanced] = useState(false)
+  const [newTag, setNewTag]     = useState('')
 
   useEffect(() => {
     if (banner) {
-      setFormData({
-        ...banner,
-        campaignPeriod: banner.campaignPeriod || { startDate: '', endDate: '' },
-        metadata: banner.metadata || { campaignName: '', category: '', tags: [], images: [] }
-      });
+      setForm({
+        ...EMPTY, ...banner,
+        campaignPeriod: banner.campaignPeriod || EMPTY.campaignPeriod,
+        metadata: { ...EMPTY.metadata, ...(banner.metadata || {}) },
+      })
+    } else {
+      setForm(EMPTY)
     }
-  }, [banner]);
+  }, [banner])
 
-  const isValidUrl = (string) => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
+  const set = (key, val) => setForm(p => ({ ...p, [key]: val }))
+  const setNested = (root, key, val) => setForm(p => ({ ...p, [root]: { ...p[root], [key]: val } }))
 
-  const handleImageFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result;
-        setFormData(prev => ({
-          ...prev,
-          imageUrl: base64
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    set(name, value)
+    if (errors[name]) setErrors(p => ({ ...p, [name]: null }))
+  }
 
-  const handleAdditionalImageFileChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result;
-        if (base64) {
-          setFormData(prev => ({
-            ...prev,
-            metadata: {
-              ...prev.metadata,
-              images: [...prev.metadata.images, base64]
-            }
-          }));
+  const handleImageFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => { set('imageUrl', ev.target.result); setErrors(p => ({ ...p, imageUrl: null })) }
+    reader.readAsDataURL(file)
+  }
+
+  const handleExtraImages = (e) => {
+    Array.from(e.target.files || []).forEach(file => {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        if (ev.target.result) {
+          setForm(p => ({ ...p, metadata: { ...p.metadata, images: [...p.metadata.images, ev.target.result] } }))
         }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleImageUrlDirectly = (imageData) => {
-    if (imageData && !formData.metadata.images.includes(imageData)) {
-      setFormData(prev => ({
-        ...prev,
-        metadata: {
-          ...prev.metadata,
-          images: [...prev.metadata.images, imageData]
-        }
-      }));
-    }
-  };
-
-  const handleGenerateAdditionalImage = () => {
-    const placeholder = getRandomPlaceholder('banner');
-    handleImageUrlDirectly(placeholder);
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.title.trim()) {
-      newErrors.title = 'El título es requerido';
-    }
-
-    if (!formData.imageUrl.trim()) {
-      newErrors.imageUrl = 'La imagen principal es requerida';
-    }
-
-    if (formData.clickUrl.trim() && !isValidUrl(formData.clickUrl)) {
-      newErrors.clickUrl = 'La URL de destino no es válida';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: null
-      }));
-    }
-  };
-
-  const handleDateChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      campaignPeriod: {
-        ...prev.campaignPeriod,
-        [name]: value
       }
-    }));
-  };
+      reader.readAsDataURL(file)
+    })
+  }
 
-  const handleVisibilityChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      visibility: {
-        ...prev.visibility,
-        [field]: value
-      }
-    }));
-  };
+  const removeExtraImage = (idx) =>
+    setForm(p => ({ ...p, metadata: { ...p.metadata, images: p.metadata.images.filter((_, i) => i !== idx) } }))
 
-  const handleMetadataChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      metadata: {
-        ...prev.metadata,
-        [field]: value
-      }
-    }));
-  };
-
-  const handleAddTag = () => {
-    if (newTag.trim() && !formData.metadata.tags.includes(newTag.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        metadata: {
-          ...prev.metadata,
-          tags: [...prev.metadata.tags, newTag.trim()]
-        }
-      }));
-      setNewTag('');
+  const addTag = () => {
+    const t = newTag.trim()
+    if (t && !form.metadata.tags.includes(t)) {
+      setNested('metadata', 'tags', [...form.metadata.tags, t])
+      setNewTag('')
     }
-  };
+  }
 
-  const handleRemoveTag = (tagToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      metadata: {
-        ...prev.metadata,
-        tags: prev.metadata.tags.filter(tag => tag !== tagToRemove)
-      }
-    }));
-  };
+  const removeTag = (t) => setNested('metadata', 'tags', form.metadata.tags.filter(x => x !== t))
 
-  const handleAddImage = () => {
-    if (newImageUrl.trim() && isValidUrl(newImageUrl)) {
-      setFormData(prev => ({
-        ...prev,
-        metadata: {
-          ...prev.metadata,
-          images: [...prev.metadata.images, newImageUrl.trim()]
-        }
-      }));
-      setNewImageUrl('');
+  const validate = () => {
+    const e = {}
+    if (!form.title.trim())    e.title    = 'El título es requerido'
+    if (!form.imageUrl.trim()) e.imageUrl = 'La imagen principal es requerida'
+    if (form.clickUrl.trim()) {
+      try { new URL(form.clickUrl) } catch { e.clickUrl = 'URL inválida' }
     }
-  };
-
-  const handleRemoveImage = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      metadata: {
-        ...prev.metadata,
-        images: prev.metadata.images.filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  const handleGeneratePlaceholder = () => {
-    const placeholder = getRandomPlaceholder('banner');
-    setFormData(prev => ({
-      ...prev,
-      imageUrl: placeholder
-    }));
-  };
+    setErrors(e)
+    return !Object.keys(e).length
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setLoading(true);
+    e.preventDefault()
+    if (!validate()) return
+    setLoading(true)
     try {
-      if (banner && banner._id) {
-        await onSubmit(banner._id, formData);
-      } else {
-        await onSubmit(formData);
-      }
+      banner?._id ? await onSubmit(banner._id, form) : await onSubmit(form)
     } catch (err) {
-      setErrors({ submit: err.message });
+      setErrors({ submit: err.message })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  const inputCls = (key) => `input ${errors[key] ? 'border-red-400 focus:ring-red-400' : ''}`
 
   return (
-    <form className="banner-form-container" onSubmit={handleSubmit}>
-      <div className="form-content">
-        {/* Información Básica */}
-        <div className="form-section">
-          <h3>📝 Información Básica</h3>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-0">
 
-          <div className="form-group">
-            <label className="form-label required">Título del Banner</label>
-            <input
-              type="text"
-              className={`form-input ${errors.title ? 'error' : ''}`}
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="Ej: Únete a nuestra comunidad"
-            />
-            {errors.title && <span className="error-message">{errors.title}</span>}
-          </div>
+      {/* ── Essentials ── */}
+      <div className="p-6 space-y-5">
 
-          <div className="form-group">
-            <label className="form-label">Descripción</label>
-            <textarea
-              className="form-textarea"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Descripción opcional del banner..."
-            />
-          </div>
+        {/* Title */}
+        <Field label="Título *" error={errors.title}>
+          <input name="title" type="text" value={form.title} onChange={handleChange}
+            className={inputCls('title')} placeholder="Ej: ¡Viajá con Carpuling este verano!" />
+        </Field>
 
-          <div className="form-group">
-            <label className="form-label">Tipo de Banner</label>
-            <select
-              className="form-select"
-              name="type"
-              value={formData.type}
-              onChange={handleInputChange}
-            >
-              <option value="banner">Banner</option>
-              <option value="advertisement">Anuncio</option>
-              <option value="promotional">Promocional</option>
-              <option value="featured">Destacado</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Imágenes */}
-        <div className="form-section">
-          <h3>🖼️ Imágenes</h3>
-
-          <div className="form-group">
-            <label className="form-label required">Imagen Principal</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageFileChange}
-              style={{
-                padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                width: '100%',
-                cursor: 'pointer'
-              }}
-            />
-            {errors.imageUrl && <span className="error-message">{errors.imageUrl}</span>}
-
-            {formData.imageUrl && (
-              <div className="image-preview">
-                <img
-                  src={sanitizeImageUrl(formData.imageUrl) || formData.imageUrl}
-                  alt="Vista previa"
-                  onError={(e) => {
-                    e.target.src = getSvgPlaceholder(400, 150);
-                  }}
-                />
+        {/* Image */}
+        <Field label="Imagen principal *" error={errors.imageUrl}>
+          <div className="flex gap-2">
+            <label className="flex-1">
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
+              <div className={`input cursor-pointer flex items-center gap-2 text-slate-400 text-sm
+                              ${errors.imageUrl ? 'border-red-400' : ''}`}>
+                <span className="truncate">{form.imageUrl ? '✓ Imagen cargada' : 'Seleccionar imagen…'}</span>
               </div>
-            )}
+            </label>
+            <button type="button" onClick={() => { set('imageUrl', getRandomPlaceholder('banner')); setErrors(p => ({...p, imageUrl: null})) }}
+              className="btn btn-ghost border border-slate-200 px-3 text-xs text-slate-500 whitespace-nowrap">
+              <RefreshCw className="w-3.5 h-3.5" /> Demo
+            </button>
           </div>
-
-          <div className="form-group">
-            <label className="form-label">URL de Destino (Click)</label>
-            <input
-              type="url"
-              className={`form-input ${errors.clickUrl ? 'error' : ''}`}
-              name="clickUrl"
-              value={formData.clickUrl}
-              onChange={handleInputChange}
-              placeholder="https://ejemplo.com"
-            />
-            {errors.clickUrl && <span className="error-message">{errors.clickUrl}</span>}
-            <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              Para enlaces externos. Si usas botón con Web/App GoTo, este campo es opcional.
-            </p>
-          </div>
-
-          {/* Botón opcional */}
-          <div className="form-section" style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #eee' }}>
-            <h4 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>🔘 Botón opcional</h4>
-            <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-              Si completás el texto del botón, se mostrará un CTA. Definí a dónde lleva en web y/o app.
-            </p>
-            <div className="form-group">
-              <label className="form-label">Texto del botón</label>
-              <input
-                type="text"
-                className="form-input"
-                name="buttonText"
-                value={formData.buttonText || ''}
-                onChange={handleInputChange}
-                placeholder="Ej: Crear viaje, Ver viajes, Mis reservas"
-              />
+          {form.imageUrl && (
+            <div className="mt-2 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 h-36 flex items-center justify-center">
+              <img src={sanitizeImageUrl(form.imageUrl) || form.imageUrl} alt=""
+                className="h-full w-full object-contain"
+                onError={e => { e.target.src = getSvgPlaceholder(400, 144) }} />
             </div>
-            <div className="form-group">
-              <label className="form-label">Web GoTo (ruta en la web)</label>
-              <select
-                className="form-select"
-                name="webGoTo"
-                value={formData.webGoTo || ''}
-                onChange={handleInputChange}
-              >
-                <option value="">— Sin navegación web —</option>
-                <option value="/trips/create">Crear viaje</option>
-                <option value="/trips/search">Buscar viajes</option>
-                <option value="/my-trips">Mis viajes</option>
-                <option value="/bookings">Mis reservas</option>
-                <option value="/seat-reservations">Reservas de asiento</option>
-                <option value="/profile">Mi perfil</option>
-                <option value="/">Inicio</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">App GoTo (pantalla en la app móvil)</label>
-              <select
-                className="form-select"
-                name="appGoTo"
-                value={formData.appGoTo || ''}
-                onChange={handleInputChange}
-              >
-                <option value="">— Sin navegación app —</option>
-                <option value="create_trip">Crear viaje</option>
-                <option value="all_trips">Ver todos los viajes</option>
-                <option value="search_trips">Buscar viajes</option>
-                <option value="my_trips">Mis viajes</option>
-                <option value="my_bookings">Mis reservas</option>
-                <option value="my_seat_reservations">Reservas de asiento</option>
-                <option value="profile">Mi perfil</option>
-                <option value="home">Inicio</option>
-              </select>
-            </div>
-          </div>
+          )}
+        </Field>
 
-          {/* Imágenes Adicionales */}
-          <div className="form-group">
-            <label className="form-label">Imágenes Adicionales del Pack</label>
-            
-            {/* Input para cargar múltiples archivos */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleAdditionalImageFileChange}
-                style={{
-                  padding: '10px',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  flex: 1,
-                  cursor: 'pointer'
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleGenerateAdditionalImage}
-                style={{
-                  padding: '10px 16px',
-                  background: '#17a2b8',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <RefreshCw size={16} /> Generar
-              </button>
-            </div>
-
-            {/* Lista de imágenes cargadas */}
-            {formData.metadata.images.length > 0 && (
-              <div style={{ marginTop: '16px' }}>
-                <p style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-                  {formData.metadata.images.length} imagen(es) del pack:
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
-                  {formData.metadata.images.map((img, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        position: 'relative',
-                        overflow: 'hidden',
-                        borderRadius: '8px',
-                        backgroundColor: '#fff',
-                        border: '1px solid #dee2e6',
-                        aspectRatio: '1',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <img
-                        src={img}
-                        alt={`Imagen ${idx + 1}`}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        onError={(e) => {
-                          e.target.src = getSvgPlaceholder(120, 120);
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(idx)}
-                        style={{
-                          position: 'absolute',
-                          top: '4px',
-                          right: '4px',
-                          background: 'rgba(220, 53, 69, 0.95)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '50%',
-                          width: '28px',
-                          height: '28px',
-                          padding: 0,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '16px',
-                          fontWeight: 'bold',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-                        }}
-                      >
-                        ×
-                      </button>
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '0',
-                        left: '0',
-                        right: '0',
-                        background: 'rgba(0,0,0,0.6)',
-                        color: 'white',
-                        padding: '4px',
-                        fontSize: '11px',
-                        textAlign: 'center'
-                      }}>
-                        {idx + 1}/{formData.metadata.images.length}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Navigation */}
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="App — ir a">
+            <Select name="appGoTo" value={form.appGoTo} options={APP_GOTO_OPTIONS}
+              onChange={e => set('appGoTo', e.target.value)} />
+          </Field>
+          <Field label="Web — ir a">
+            <Select name="webGoTo" value={form.webGoTo} options={WEB_GOTO_OPTIONS}
+              onChange={e => set('webGoTo', e.target.value)} />
+          </Field>
         </div>
 
-        {/* Período de Campaña */}
-        <div className="form-section">
-          <h3>📅 Período de Campaña</h3>
+        {/* Button text */}
+        <Field label="Texto del botón" hint="Opcional — si lo dejás vacío no se muestra el botón">
+          <input name="buttonText" type="text" value={form.buttonText} onChange={handleChange}
+            className="input" placeholder="Ej: Ver viajes, Reservar ahora…" />
+        </Field>
+      </div>
 
-          <div className="date-picker-group">
-            <div className="form-group">
-              <label className="form-label">Fecha de Inicio</label>
-              <input
-                type="date"
-                className="form-input"
-                name="startDate"
-                value={formData.campaignPeriod.startDate}
-                onChange={handleDateChange}
-              />
-            </div>
+      {/* ── Advanced toggle ── */}
+      <button type="button" onClick={() => setAdvanced(v => !v)}
+        className="flex items-center justify-between w-full px-6 py-3 text-sm font-medium
+                   text-slate-500 hover:text-slate-700 border-y border-slate-100
+                   hover:bg-slate-50 transition-colors">
+        <span>Opciones avanzadas</span>
+        {advanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
 
-            <div className="form-group">
-              <label className="form-label">Fecha de Fin</label>
-              <input
-                type="date"
-                className="form-input"
-                name="endDate"
-                value={formData.campaignPeriod.endDate}
-                onChange={handleDateChange}
-              />
-            </div>
-          </div>
-        </div>
+      {/* ── Advanced section ── */}
+      {advanced && (
+        <div className="p-6 space-y-5 bg-slate-50/60">
 
-        {/* Visibilidad */}
-        <div className="form-section">
-          <h3>👁️ Visibilidad</h3>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Tipo de Usuario</label>
-              <select
-                className="form-select"
-                value={formData.visibility.userTypes}
-                onChange={(e) => handleVisibilityChange('userTypes', e.target.value)}
-              >
-                <option value="both">Ambos (Conductor y Pasajero)</option>
-                <option value="driver">Solo Conductores</option>
-                <option value="passenger">Solo Pasajeros</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Dispositivos</label>
-              <select
-                className="form-select"
-                value={formData.visibility.devices}
-                onChange={(e) => handleVisibilityChange('devices', e.target.value)}
-              >
-                <option value="both">Ambos (Móvil y Web)</option>
-                <option value="mobile">Solo Móvil</option>
-                <option value="web">Solo Web</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Metadata */}
-        <div className="form-section">
-          <h3>🏷️ Información Adicional</h3>
-
-          <div className="form-group">
-            <label className="form-label">Nombre de Campaña</label>
-            <input
-              type="text"
-              className="form-input"
-              name="campaignName"
-              value={formData.metadata.campaignName}
-              onChange={(e) => handleMetadataChange('campaignName', e.target.value)}
-              placeholder="Ej: Campaña de Invierno 2024"
-            />
+          {/* Description + Type */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Descripción" className="col-span-2">
+              <textarea name="description" value={form.description} onChange={handleChange}
+                className="input h-auto py-2 resize-none" rows={2}
+                placeholder="Descripción opcional del banner…" />
+            </Field>
+            <Field label="Tipo">
+              <Select name="type" value={form.type} onChange={handleChange}
+                options={[
+                  { value: 'banner',        label: 'Banner' },
+                  { value: 'advertisement', label: 'Anuncio' },
+                  { value: 'promotional',   label: 'Promocional' },
+                  { value: 'featured',      label: 'Destacado' },
+                ]} />
+            </Field>
+            <Field label="Orden" hint="Ascendente">
+              <input name="order" type="number" min="0" value={form.order} onChange={handleChange} className="input" />
+            </Field>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Categoría</label>
-            <input
-              type="text"
-              className="form-input"
-              name="category"
-              value={formData.metadata.category}
-              onChange={(e) => handleMetadataChange('category', e.target.value)}
-              placeholder="Ej: Marketing, Promoción, Premium"
-            />
+          {/* Click URL */}
+          <Field label="URL externa (click)" error={errors.clickUrl} hint="Para links externos fuera de la app">
+            <input name="clickUrl" type="url" value={form.clickUrl} onChange={handleChange}
+              className={inputCls('clickUrl')} placeholder="https://…" />
+          </Field>
+
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Inicio campaña">
+              <input type="date" name="startDate" value={form.campaignPeriod.startDate}
+                onChange={e => setNested('campaignPeriod', 'startDate', e.target.value)} className="input" />
+            </Field>
+            <Field label="Fin campaña">
+              <input type="date" name="endDate" value={form.campaignPeriod.endDate}
+                onChange={e => setNested('campaignPeriod', 'endDate', e.target.value)} className="input" />
+            </Field>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Etiquetas</label>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-              <input
-                type="text"
-                className="form-input"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                placeholder="Escribe y presiona Enter"
-              />
-              <button
-                type="button"
-                onClick={handleAddTag}
-                style={{
-                  padding: '10px 16px',
-                  background: '#0066cc',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-              >
+          {/* Visibility */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Usuarios">
+              <Select value={form.visibility.userTypes}
+                onChange={e => setNested('visibility', 'userTypes', e.target.value)}
+                options={[
+                  { value: 'both',      label: 'Todos' },
+                  { value: 'driver',    label: 'Solo conductores' },
+                  { value: 'passenger', label: 'Solo pasajeros' },
+                ]} />
+            </Field>
+            <Field label="Dispositivos">
+              <Select value={form.visibility.devices}
+                onChange={e => setNested('visibility', 'devices', e.target.value)}
+                options={[
+                  { value: 'both',   label: 'Todos' },
+                  { value: 'mobile', label: 'Solo móvil' },
+                  { value: 'web',    label: 'Solo web' },
+                ]} />
+            </Field>
+          </div>
+
+          {/* Campaign name + category */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Nombre de campaña">
+              <input type="text" value={form.metadata.campaignName}
+                onChange={e => setNested('metadata', 'campaignName', e.target.value)}
+                className="input" placeholder="Campaña verano 2025" />
+            </Field>
+            <Field label="Categoría">
+              <input type="text" value={form.metadata.category}
+                onChange={e => setNested('metadata', 'category', e.target.value)}
+                className="input" placeholder="Marketing, Promo…" />
+            </Field>
+          </div>
+
+          {/* Tags */}
+          <Field label="Etiquetas">
+            <div className="flex gap-2">
+              <input type="text" className="input" value={newTag}
+                onChange={e => setNewTag(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }}
+                placeholder="Escribí y presioná Enter" />
+              <button type="button" onClick={addTag}
+                className="btn btn-secondary border border-slate-200 px-3 text-sm whitespace-nowrap">
                 Agregar
               </button>
             </div>
+            {form.metadata.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {form.metadata.tags.map(t => (
+                  <span key={t} className="badge badge-blue gap-1 pr-1">
+                    {t}
+                    <button type="button" onClick={() => removeTag(t)}
+                      className="hover:text-red-500 transition-colors ml-0.5">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </Field>
 
-            {formData.metadata.tags.length > 0 && (
-              <div className="tag-input" style={{ cursor: 'default', padding: '12px' }}>
-                {formData.metadata.tags.map(tag => (
-                  <div key={tag} className="tag">
-                    {tag}
-                    <button
-                      type="button"
-                      className="tag-remove"
-                      onClick={() => handleRemoveTag(tag)}
-                    >
-                      ×
+          {/* Extra images */}
+          <Field label="Imágenes adicionales del pack">
+            <div className="flex gap-2">
+              <label className="flex-1">
+                <input type="file" accept="image/*" multiple className="hidden" onChange={handleExtraImages} />
+                <div className="input cursor-pointer text-slate-400 text-sm">Seleccionar imágenes…</div>
+              </label>
+              <button type="button"
+                onClick={() => setForm(p => ({ ...p, metadata: { ...p.metadata, images: [...p.metadata.images, getRandomPlaceholder('banner')] } }))}
+                className="btn btn-ghost border border-slate-200 px-3 text-xs text-slate-500 whitespace-nowrap">
+                <RefreshCw className="w-3.5 h-3.5" /> Demo
+              </button>
+            </div>
+            {form.metadata.images.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 mt-2">
+                {form.metadata.images.map((img, i) => (
+                  <div key={i} className="relative rounded-lg overflow-hidden border border-slate-200 aspect-square bg-slate-100">
+                    <img src={img} alt="" className="w-full h-full object-cover"
+                      onError={e => { e.target.src = getSvgPlaceholder(120, 120) }} />
+                    <button type="button" onClick={() => removeExtraImage(i)}
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs hover:bg-red-600 transition-colors">
+                      <X className="w-3 h-3" />
                     </button>
                   </div>
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Orden</label>
-            <input
-              type="number"
-              className="form-input"
-              name="order"
-              value={formData.order}
-              onChange={handleInputChange}
-              min="0"
-            />
-            <p style={{ fontSize: '12px', color: '#999', margin: '6px 0 0 0' }}>
-              Los banners se mostrarán en orden ascendente
-            </p>
-          </div>
+          </Field>
         </div>
+      )}
 
-        {errors.submit && (
-          <div className="alert error" style={{ margin: '16px 0' }}>
-            {errors.submit}
-          </div>
-        )}
-      </div>
+      {/* Error global */}
+      {errors.submit && (
+        <div className="mx-6 my-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
+          {errors.submit}
+        </div>
+      )}
 
-      {/* Acciones */}
-      <div className="form-actions">
-        <button
-          type="button"
-          className="form-btn cancel"
-          onClick={onCancel}
-          disabled={loading}
-        >
-          <X size={18} /> Cancelar
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-white">
+        <button type="button" onClick={onCancel} disabled={loading} className="btn btn-secondary">
+          <X className="w-4 h-4" /> Cancelar
         </button>
-        <button
-          type="submit"
-          className="form-btn submit"
-          disabled={loading}
-        >
-          <Save size={18} /> {loading ? 'Guardando...' : banner ? 'Actualizar' : 'Crear'}
+        <button type="submit" disabled={loading} className="btn btn-primary">
+          <Save className="w-4 h-4" />
+          {loading ? 'Guardando…' : banner ? 'Actualizar' : 'Crear banner'}
         </button>
       </div>
     </form>
-  );
-};
+  )
+}
 
-export default BannerForm;
+export default BannerForm
