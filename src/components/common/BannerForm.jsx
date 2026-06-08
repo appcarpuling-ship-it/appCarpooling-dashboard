@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, X, ChevronDown, ChevronUp, RefreshCw, Link } from 'lucide-react'
+import { Save, X, ChevronDown, ChevronUp, RefreshCw, Link, Smartphone, Globe } from 'lucide-react'
 import { getRandomPlaceholder, getSvgPlaceholder } from '../../constants/placeholders'
 import { sanitizeImageUrl } from '../../utils/imageUtils'
 
@@ -26,6 +26,18 @@ const WEB_GOTO_OPTIONS = [
   { value: '/profile',           label: 'Mi perfil' },
 ]
 
+const APP_SCREENS = [
+  { value: 'home',        label: 'Inicio' },
+  { value: 'booking',     label: 'Buscar viajes' },
+  { value: 'carpoolings', label: 'Mis carpoolings' },
+  { value: 'trip_detail', label: 'Detalle de viaje' },
+]
+
+const WEB_PAGES = [
+  { value: 'home',   label: 'Inicio' },
+  { value: 'search', label: 'Buscar viajes' },
+]
+
 const EMPTY = {
   sectionTitle: '',
   title: '',
@@ -37,7 +49,8 @@ const EMPTY = {
   webGoTo: '',
   appGoTo: '',
   order: 0,
-  visibility: { userTypes: 'both', devices: 'both' },
+  targetApp: [],
+  targetWeb: [],
 }
 
 const Field = ({ label, error, children, hint }) => (
@@ -66,11 +79,12 @@ const BannerForm = ({ banner, currentSection, sections = [], onSubmit, onCancel 
       setForm({
         ...EMPTY,
         ...banner,
-        sectionTitle: banner.sectionTitle || currentSection || '',
-        hipervinculo: banner.hipervinculo ?? false,
-        textHipervinculo: banner.textHipervinculo || '',
-        texto: banner.texto || '',
-        visibility: banner.visibility || EMPTY.visibility,
+        sectionTitle:     banner.sectionTitle     || currentSection || '',
+        hipervinculo:     banner.hipervinculo      ?? false,
+        textHipervinculo: banner.textHipervinculo  || '',
+        texto:            banner.texto             || '',
+        targetApp:        Array.isArray(banner.targetApp) ? banner.targetApp : [],
+        targetWeb:        Array.isArray(banner.targetWeb) ? banner.targetWeb : [],
       })
     } else {
       setForm({ ...EMPTY, sectionTitle: currentSection || '' })
@@ -78,7 +92,12 @@ const BannerForm = ({ banner, currentSection, sections = [], onSubmit, onCancel 
   }, [banner, currentSection])
 
   const set = (key, val) => setForm(p => ({ ...p, [key]: val }))
-  const setNested = (root, key, val) => setForm(p => ({ ...p, [root]: { ...p[root], [key]: val } }))
+
+  const toggleArrayVal = (key, val) =>
+    setForm(p => ({
+      ...p,
+      [key]: p[key].includes(val) ? p[key].filter(v => v !== val) : [...p[key], val]
+    }))
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -252,32 +271,46 @@ const BannerForm = ({ banner, currentSection, sections = [], onSubmit, onCancel 
 
       {advanced && (
         <div className="p-6 space-y-5 bg-slate-50/60">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Orden" hint="Ascendente">
-              <input name="order" type="number" min="0" value={form.order} onChange={handleChange} className="input" />
-            </Field>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Usuarios">
-              <Select value={form.visibility.userTypes}
-                onChange={e => setNested('visibility', 'userTypes', e.target.value)}
-                options={[
-                  { value: 'both',      label: 'Todos' },
-                  { value: 'driver',    label: 'Solo conductores' },
-                  { value: 'passenger', label: 'Solo pasajeros' },
-                ]} />
-            </Field>
-            <Field label="Dispositivos">
-              <Select value={form.visibility.devices}
-                onChange={e => setNested('visibility', 'devices', e.target.value)}
-                options={[
-                  { value: 'both',   label: 'Todos' },
-                  { value: 'mobile', label: 'Solo móvil' },
-                  { value: 'web',    label: 'Solo web' },
-                ]} />
-            </Field>
-          </div>
+          {/* Orden */}
+          <Field label="Orden" hint="Ascendente (menor número = primero)">
+            <input name="order" type="number" min="0" value={form.order} onChange={handleChange} className="input w-28" />
+          </Field>
+
+          {/* Dónde aparece en la app */}
+          <Field label={<span className="flex items-center gap-1.5"><Smartphone className="w-3.5 h-3.5 text-slate-400"/>Mostrar en la app</span>} hint="Sin selección = aparece en todas las pantallas">
+            <div className="flex flex-wrap gap-2 mt-1">
+              {APP_SCREENS.map(s => (
+                <label key={s.value} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm cursor-pointer border transition-all
+                  ${form.targetApp.includes(s.value)
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
+                  <input type="checkbox" className="hidden"
+                    checked={form.targetApp.includes(s.value)}
+                    onChange={() => toggleArrayVal('targetApp', s.value)} />
+                  {s.label}
+                </label>
+              ))}
+            </div>
+          </Field>
+
+          {/* Dónde aparece en la web */}
+          <Field label={<span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5 text-slate-400"/>Mostrar en la web</span>} hint="Sin selección = aparece en todas las páginas">
+            <div className="flex flex-wrap gap-2 mt-1">
+              {WEB_PAGES.map(s => (
+                <label key={s.value} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm cursor-pointer border transition-all
+                  ${form.targetWeb.includes(s.value)
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
+                  <input type="checkbox" className="hidden"
+                    checked={form.targetWeb.includes(s.value)}
+                    onChange={() => toggleArrayVal('targetWeb', s.value)} />
+                  {s.label}
+                </label>
+              ))}
+            </div>
+          </Field>
+
         </div>
       )}
 
