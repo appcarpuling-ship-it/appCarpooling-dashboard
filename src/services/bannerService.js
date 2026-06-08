@@ -1,169 +1,70 @@
 import api from './api';
 
-const ENDPOINTS = {
-  BANNERS: '/banners',
-  BANNER_BY_ID: '/banners/:id',
-  BANNERS_BY_PACKAGE: '/banners/package/:packageId',
-  TOGGLE_STATUS: '/banners/:id/toggle-status',
-  REORDER: '/banners/reorder/:packageId',
-  STATS: '/banners/stats/:packageId',
-  REGISTER_VIEW: '/banners/:id/register-view',
-  REGISTER_CLICK: '/banners/:id/register-click'
+const BASE = '/banners';
+
+export const getAllSections = async () => {
+  const response = await api.get(`${BASE}/sections`);
+  return response.data;
 };
 
-/**
- * Obtener todos los banners de un paquete
- */
-export const getBannersByPackage = async (packageId, isActive = null) => {
-  try {
-    let url = ENDPOINTS.BANNERS_BY_PACKAGE.replace(':packageId', packageId);
-    if (isActive !== null) {
-      url += `?isActive=${isActive}`;
-    }
-
-    const response = await api.get(url);
-    return response.data;
-  } catch (error) {
-    console.error('Error al obtener banners del paquete:', error);
-    throw error;
-  }
+export const getBannersBySection = async (sectionTitle, isActive = null) => {
+  let url = `${BASE}/section/${encodeURIComponent(sectionTitle)}`;
+  if (isActive !== null) url += `?isActive=${isActive}`;
+  const response = await api.get(url);
+  return response.data;
 };
 
-/**
- * Obtener un banner específico
- */
 export const getBannerById = async (id) => {
-  try {
-    const response = await api.get(ENDPOINTS.BANNER_BY_ID.replace(':id', id));
-    return response.data;
-  } catch (error) {
-    console.error('Error al obtener banner:', error);
-    throw error;
-  }
+  const response = await api.get(`${BASE}/${id}`);
+  return response.data;
 };
 
-/**
- * Crear un nuevo banner
- */
 export const createBanner = async (bannerData) => {
-  try {
-    const response = await api.post(ENDPOINTS.BANNERS, bannerData);
-    return response.data;
-  } catch (error) {
-    console.error('Error al crear banner:', error);
-    throw error;
-  }
+  const response = await api.post(BASE, bannerData);
+  return response.data;
 };
 
-/**
- * Actualizar un banner
- */
 export const updateBanner = async (id, bannerData) => {
-  try {
-    const response = await api.put(
-      ENDPOINTS.BANNER_BY_ID.replace(':id', id),
-      bannerData
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al actualizar banner:', error);
-    throw error;
-  }
+  const response = await api.put(`${BASE}/${id}`, bannerData);
+  return response.data;
 };
 
-/**
- * Cambiar estado del banner (activar/desactivar)
- */
 export const toggleBannerStatus = async (id) => {
-  try {
-    const response = await api.patch(
-      ENDPOINTS.TOGGLE_STATUS.replace(':id', id)
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al cambiar estado del banner:', error);
-    throw error;
-  }
+  const response = await api.patch(`${BASE}/${id}/toggle-status`);
+  return response.data;
 };
 
-/**
- * Reordenar banners en un paquete
- */
-export const reorderBanners = async (packageId, banners) => {
-  try {
-    const response = await api.patch(
-      ENDPOINTS.REORDER.replace(':packageId', packageId),
-      { banners }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al reordenar banners:', error);
-    throw error;
-  }
+export const reorderBanners = async (sectionTitle, banners) => {
+  const response = await api.patch(
+    `${BASE}/reorder/${encodeURIComponent(sectionTitle)}`,
+    { banners }
+  );
+  return response.data;
 };
 
-/**
- * Obtener estadísticas de banners de un paquete
- */
-export const getBannerStats = async (packageId) => {
-  try {
-    const response = await api.get(
-      ENDPOINTS.STATS.replace(':packageId', packageId)
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al obtener estadísticas:', error);
-    throw error;
-  }
+export const getBannerStats = async (sectionTitle) => {
+  const response = await api.get(`${BASE}/stats/${encodeURIComponent(sectionTitle)}`);
+  return response.data;
 };
 
-/**
- * Registrar vista de banner
- */
 export const registerBannerView = async (id) => {
-  try {
-    const response = await api.post(
-      ENDPOINTS.REGISTER_VIEW.replace(':id', id)
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al registrar vista:', error);
-    throw error;
-  }
+  const response = await api.post(`${BASE}/${id}/register-view`);
+  return response.data;
 };
 
-/**
- * Registrar clic de banner
- */
 export const registerBannerClick = async (id) => {
-  try {
-    const response = await api.post(
-      ENDPOINTS.REGISTER_CLICK.replace(':id', id)
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al registrar clic:', error);
-    throw error;
-  }
+  const response = await api.post(`${BASE}/${id}/register-click`);
+  return response.data;
 };
 
-/**
- * Eliminar un banner
- */
 export const deleteBanner = async (id) => {
-  try {
-    const response = await api.delete(
-      ENDPOINTS.BANNER_BY_ID.replace(':id', id)
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al eliminar banner:', error);
-    throw error;
-  }
+  const response = await api.delete(`${BASE}/${id}`);
+  return response.data;
 };
 
 export default {
-  getBannersByPackage,
+  getAllSections,
+  getBannersBySection,
   getBannerById,
   createBanner,
   updateBanner,
@@ -172,5 +73,5 @@ export default {
   getBannerStats,
   registerBannerView,
   registerBannerClick,
-  deleteBanner
+  deleteBanner,
 };

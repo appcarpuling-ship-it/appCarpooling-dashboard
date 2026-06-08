@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@theme {
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-card-hover: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+}
+
 @layer base {
   body {
     @apply bg-slate-50 antialiased text-slate-900;
