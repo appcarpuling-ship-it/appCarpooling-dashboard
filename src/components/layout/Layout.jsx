@@ -4,7 +4,7 @@ import { useAuthStore } from '../../context/authStore'
 import {
   Home, Users, Car, Calendar, CreditCard, MessageCircle, Bell,
   TrendingUp, Settings, LogOut, Menu, X, BarChart3, DollarSign,
-  Image, Newspaper, Flag,
+  Image, Newspaper, Flag, Ticket,
 } from 'lucide-react'
 
 const NAV = [
@@ -17,6 +17,7 @@ const NAV = [
   { name: 'Comisiones',     href: '/commissions',    icon: DollarSign },
   { name: 'Chat',           href: '/chat',           icon: MessageCircle },
   { name: 'Banners',        href: '/banners',        icon: Image },
+  { name: 'Cupones',        href: '/coupons',        icon: Ticket },
   { name: 'Noticias',       href: '/news',           icon: Newspaper },
   { name: 'Reportes',       href: '/user-reports',   icon: Flag },
   { name: 'Notificaciones', href: '/notifications',  icon: Bell },

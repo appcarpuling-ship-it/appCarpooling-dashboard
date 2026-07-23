@@ -25,6 +25,7 @@ import Payments from './pages/Payments'
 import Commissions from './pages/Commissions'
 import Chat from './pages/Chat'
 import Banners from './pages/Banners'
+import Coupons from './pages/Coupons'
 import NewsPage from './pages/News'
 import Notifications from './pages/Notifications'
 import UserReports from './pages/UserReports'
@@ -70,6 +71,7 @@ function App() {
         <Route path="commissions" element={<Commissions />} />
         <Route path="chat" element={<Chat />} />
         <Route path="banners" element={<Banners />} />
+        <Route path="coupons" element={<Coupons />} />
         <Route path="news" element={<NewsPage />} />
         <Route path="user-reports" element={<UserReports />} />
         <Route path="notifications" element={<Notifications />} />
