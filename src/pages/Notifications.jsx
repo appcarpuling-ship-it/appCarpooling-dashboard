@@ -40,7 +40,7 @@ const Notifications = () => {
   const [sendFormData, setSendFormData] = useState({
     title: '',
     message: '',
-    recipientType: 'bulk', // 'bulk' o 'single'
+    recipientType: 'all', // 'all' | 'bulk' (por ubicacion) | 'single'
     province: '',
     city: '',
     userId: ''
@@ -117,14 +117,15 @@ const Notifications = () => {
           title: data.title,
           message: data.message
         })
-      } else {
-        return notificationService.sendBulk({
-          title: data.title,
-          message: data.message,
-          province: data.province || undefined,
-          city: data.city || undefined
-        })
       }
+      // 'all' y 'bulk' pegan al mismo endpoint: sin provincia ni ciudad, el backend
+      // agarra a todos los usuarios activos. La diferencia es solo del formulario.
+      return notificationService.sendBulk({
+        title: data.title,
+        message: data.message,
+        province: data.recipientType === 'all' ? undefined : (data.province || undefined),
+        city:     data.recipientType === 'all' ? undefined : (data.city || undefined)
+      })
     },
     onSuccess: (response) => {
       queryClient.invalidateQueries(['notifications'])
@@ -134,7 +135,7 @@ const Notifications = () => {
       setSendFormData({
         title: '',
         message: '',
-        recipientType: 'bulk',
+        recipientType: 'all',
         province: '',
         city: '',
         userId: ''
@@ -486,7 +487,7 @@ const Notifications = () => {
           setSendFormData({
             title: '',
             message: '',
-            recipientType: 'bulk',
+            recipientType: 'all',
             province: '',
             city: '',
             userId: ''
@@ -515,6 +516,7 @@ const Notifications = () => {
                     userId: ''
                   }))}
                 >
+                  <option value="all">A Todos los Usuarios</option>
                   <option value="bulk">A Múltiples Usuarios (por ubicación)</option>
                   <option value="single">A Un Usuario Específico</option>
                 </select>
@@ -549,6 +551,15 @@ const Notifications = () => {
                 />
                 <p className="text-xs text-gray-500 mt-1">{sendFormData.message.length}/500</p>
               </div>
+
+              {/* A todos: sin filtros, pero conviene que quede claro el alcance */}
+              {sendFormData.recipientType === 'all' && (
+                <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                  <p className="text-xs text-amber-800">
+                    Se envía a <strong>todos los usuarios activos</strong>, sin filtrar por ubicación.
+                  </p>
+                </div>
+              )}
 
               {/* Bulk Recipients Options */}
               {sendFormData.recipientType === 'bulk' && (
@@ -610,7 +621,7 @@ const Notifications = () => {
               setSendFormData({
                 title: '',
                 message: '',
-                recipientType: 'bulk',
+                recipientType: 'all',
                 province: '',
                 city: '',
                 userId: ''
