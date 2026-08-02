@@ -19,6 +19,21 @@ export const getBannerById = async (id) => {
   return response.data;
 };
 
+/**
+ * Sube la imagen y devuelve su URL de Cloudinary.
+ * Antes el archivo se guardaba en base64 dentro de imageUrl: cada banner pesaba
+ * ~600 KB en la base y el listado del Home de la app tardaba segundos en cargar.
+ */
+export const uploadBannerImage = async (file) => {
+  const body = new FormData();
+  body.append('image', file);
+  // Sin Content-Type a mano: el navegador tiene que poner el boundary del multipart.
+  const response = await api.post(`${BASE}/upload`, body, {
+    headers: { 'Content-Type': undefined },
+  });
+  return response.data;
+};
+
 export const createBanner = async (bannerData) => {
   const response = await api.post(BASE, bannerData);
   return response.data;

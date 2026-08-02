@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Save, X, ChevronDown, ChevronUp, RefreshCw, Link, Smartphone, Globe } from 'lucide-react'
 import { getRandomPlaceholder, getSvgPlaceholder } from '../../constants/placeholders'
 import { sanitizeImageUrl } from '../../utils/imageUtils'
+import { uploadBannerImage } from '../../services/bannerService'
 
 const APP_GOTO_OPTIONS = [
   { value: '',                     label: '— Sin navegación —' },
@@ -72,6 +73,7 @@ const BannerForm = ({ banner, currentSection, sections = [], onSubmit, onCancel 
   const [form, setForm]         = useState(EMPTY)
   const [errors, setErrors]     = useState({})
   const [loading, setLoading]   = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [advanced, setAdvanced] = useState(false)
 
   useEffect(() => {
@@ -108,12 +110,23 @@ const BannerForm = ({ banner, currentSection, sections = [], onSubmit, onCancel 
     if (errors[name]) setErrors(p => ({ ...p, [name]: null }))
   }
 
-  const handleImageFile = (e) => {
+  // El archivo se sube a Cloudinary y se guarda la URL. Antes se convertia a base64 y
+  // se guardaba entero en imageUrl: la base crecia ~600 KB por banner y el listado que
+  // pide el Home de la app pesaba 2,4 MB, que es lo que lo hacia tardar en aparecer.
+  const handleImageFile = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => { set('imageUrl', ev.target.result); setErrors(p => ({ ...p, imageUrl: null })) }
-    reader.readAsDataURL(file)
+    setUploading(true)
+    setErrors(p => ({ ...p, imageUrl: null }))
+    try {
+      const res = await uploadBannerImage(file)
+      set('imageUrl', res.data.imageUrl)
+    } catch (err) {
+      setErrors(p => ({ ...p, imageUrl: err.message || 'No se pudo subir la imagen' }))
+    } finally {
+      setUploading(false)
+      e.target.value = '' // permite volver a elegir el mismo archivo si fallo
+    }
   }
 
   const validate = () => {
@@ -194,7 +207,9 @@ const BannerForm = ({ banner, currentSection, sections = [], onSubmit, onCancel 
               <input type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
               <div className={`input cursor-pointer flex items-center gap-2 text-slate-400 text-sm
                               ${errors.imageUrl ? 'border-red-400' : ''}`}>
-                <span className="truncate">{form.imageUrl ? '✓ Imagen cargada' : 'Seleccionar imagen…'}</span>
+                <span className="truncate">
+                  {uploading ? 'Subiendo imagen…' : form.imageUrl ? '✓ Imagen cargada' : 'Seleccionar imagen…'}
+                </span>
               </div>
             </label>
             <button type="button"
