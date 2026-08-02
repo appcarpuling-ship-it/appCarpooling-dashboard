@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, Table, Button, Input, Modal, Badge, Loading } from '../components/common'
 import { notificationService } from '../services'
+import { ARGENTINA_PROVINCES, getCitiesForProvince } from '../constants/provinces'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -564,15 +565,25 @@ const Notifications = () => {
               {/* Bulk Recipients Options */}
               {sendFormData.recipientType === 'bulk' && (
                 <>
+                  {/* Listas fijas, no texto libre: el filtro del backend compara contra lo
+                      que la app guardo en el perfil, asi que un acento o una abreviatura
+                      distinta deja la notificacion sin destinatarios. */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Provincia (Opcional)
                     </label>
-                    <Input
-                      placeholder="Ej: Buenos Aires, Córdoba..."
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       value={sendFormData.province}
-                      onChange={(e) => setSendFormData(prev => ({ ...prev, province: e.target.value }))}
-                    />
+                      onChange={(e) => setSendFormData(prev => ({
+                        ...prev,
+                        province: e.target.value,
+                        city: '', // las ciudades dependen de la provincia
+                      }))}
+                    >
+                      <option value="">— Todas las provincias —</option>
+                      {ARGENTINA_PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
                     <p className="text-xs text-gray-500 mt-1">Déjalo vacío para enviar a todos</p>
                   </div>
 
@@ -580,11 +591,21 @@ const Notifications = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Ciudad (Opcional)
                     </label>
-                    <Input
-                      placeholder="Ej: Capital Federal, Mendoza..."
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500
+                                 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400"
                       value={sendFormData.city}
+                      disabled={!sendFormData.province}
                       onChange={(e) => setSendFormData(prev => ({ ...prev, city: e.target.value }))}
-                    />
+                    >
+                      <option value="">— Todas las ciudades —</option>
+                      {getCitiesForProvince(sendFormData.province).map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    {!sendFormData.province && (
+                      <p className="text-xs text-gray-500 mt-1">Elegí una provincia para filtrar por ciudad</p>
+                    )}
                   </div>
                 </>
               )}
