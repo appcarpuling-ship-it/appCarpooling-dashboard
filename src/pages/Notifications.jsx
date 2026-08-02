@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, Table, Button, Input, Modal, Badge, Loading } from '../components/common'
-import { notificationService } from '../services'
+import { notificationService, userService } from '../services'
 import { ARGENTINA_PROVINCES, getCitiesForProvince } from '../constants/provinces'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -46,6 +46,37 @@ const Notifications = () => {
     city: '',
     userId: ''
   })
+
+  // Buscador de usuarios del envío individual. Antes había que pegar el _id a mano.
+  const [userSearch, setUserSearch] = useState('')
+  const [debouncedUserSearch, setDebouncedUserSearch] = useState('')
+  const [selectedUser, setSelectedUser] = useState(null)
+
+  // 1,5s: la búsqueda pega a la API en cada cambio, y sin esperar salía una request
+  // por tecla. El texto de abajo avisa mientras el debounce corre, para que no
+  // parezca que el listado se quedó colgado.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedUserSearch(userSearch.trim()), 1500)
+    return () => clearTimeout(t)
+  }, [userSearch])
+
+  // El modal se cierra por tres caminos (enviar, Cancelar, click afuera): limpiar acá
+  // cubre los tres, en vez de repetirlo en cada uno.
+  useEffect(() => {
+    if (!showSendModal) {
+      setUserSearch('')
+      setDebouncedUserSearch('')
+      setSelectedUser(null)
+    }
+  }, [showSendModal])
+
+  const { data: usersData, isFetching: loadingUsers } = useQuery({
+    queryKey: ['notif-user-picker', debouncedUserSearch],
+    queryFn: () => userService.search({ q: debouncedUserSearch || undefined, limit: 10 }),
+    enabled: showSendModal && sendFormData.recipientType === 'single',
+    keepPreviousData: true,
+  })
+  const usersFound = usersData?.data || []
 
   const queryClient = useQueryClient()
 
@@ -614,13 +645,73 @@ const Notifications = () => {
               {sendFormData.recipientType === 'single' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    User ID
+                    Usuario
                   </label>
-                  <Input
-                    placeholder="Pega el ID del usuario aquí"
-                    value={sendFormData.userId}
-                    onChange={(e) => setSendFormData(prev => ({ ...prev, userId: e.target.value }))}
-                  />
+
+                  {selectedUser ? (
+                    <div className="flex items-center justify-between gap-3 border border-gray-300 rounded-lg px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {selectedUser.firstName} {selectedUser.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {[selectedUser.city, selectedUser.province].filter(Boolean).join(', ') || 'Sin ubicación'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="text-xs text-blue-600 hover:underline shrink-0"
+                        onClick={() => {
+                          setSelectedUser(null)
+                          setSendFormData(prev => ({ ...prev, userId: '' }))
+                        }}
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Input
+                        placeholder="Buscá por nombre y apellido…"
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                      />
+
+                      <div className="mt-2 border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                        {loadingUsers ? (
+                          <p className="text-xs text-gray-500 px-3 py-3">Buscando…</p>
+                        ) : usersFound.length === 0 ? (
+                          <p className="text-xs text-gray-500 px-3 py-3">
+                            {debouncedUserSearch ? 'Ningún usuario coincide.' : 'No hay usuarios para mostrar.'}
+                          </p>
+                        ) : (
+                          usersFound.map(u => (
+                            <button
+                              key={u._id}
+                              type="button"
+                              className="w-full text-left px-3 py-2 hover:bg-gray-50"
+                              onClick={() => {
+                                setSelectedUser(u)
+                                setSendFormData(prev => ({ ...prev, userId: u._id }))
+                              }}
+                            >
+                              <p className="text-sm text-gray-900">{u.firstName} {u.lastName}</p>
+                              <p className="text-xs text-gray-500">
+                                {[u.city, u.province].filter(Boolean).join(', ') || 'Sin ubicación'}
+                              </p>
+                            </button>
+                          ))
+                        )}
+                      </div>
+
+                      <p className="text-xs text-gray-500 mt-1">
+                        {debouncedUserSearch
+                          ? 'Se muestran hasta 10 resultados.'
+                          : 'Se muestran los primeros 10. Escribí para filtrar.'}
+                        {userSearch !== debouncedUserSearch && ' Buscando en un momento…'}
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
 
