@@ -76,15 +76,18 @@ const BannerForm = ({ banner, currentSection, sections = [], onSubmit, onCancel 
 
   useEffect(() => {
     if (banner) {
+      // La API manda null en los campos opcionales que nunca se cargaron, y con
+      // ...banner esos null pisaban los '' de EMPTY: despues validate() hacia
+      // .trim() sobre null y reventaba. Se descartan para que gane el default.
+      const cargados = Object.fromEntries(
+        Object.entries(banner).filter(([, v]) => v != null)
+      )
       setForm({
         ...EMPTY,
-        ...banner,
-        sectionTitle:     banner.sectionTitle     || currentSection || '',
-        hipervinculo:     banner.hipervinculo      ?? false,
-        textHipervinculo: banner.textHipervinculo  || '',
-        texto:            banner.texto             || '',
-        targetApp:        Array.isArray(banner.targetApp) ? banner.targetApp : [],
-        targetWeb:        Array.isArray(banner.targetWeb) ? banner.targetWeb : [],
+        ...cargados,
+        sectionTitle: cargados.sectionTitle || currentSection || '',
+        targetApp:    Array.isArray(banner.targetApp) ? banner.targetApp : [],
+        targetWeb:    Array.isArray(banner.targetWeb) ? banner.targetWeb : [],
       })
     } else {
       setForm({ ...EMPTY, sectionTitle: currentSection || '' })

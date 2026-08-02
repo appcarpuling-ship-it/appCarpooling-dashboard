@@ -4,14 +4,17 @@
  */
 
 export const PLACEHOLDER_IMAGES = {
-  // Banner sizes (1080x300)
+  // Banner sizes (1080x540). La app dibuja los banners 2:1 en todas las secciones
+  // (BANNER_HEIGHT = BANNER_WIDTH / 2 en HomeScreen y CarpoolingsScreen), y con
+  // resizeMode cover cualquier otra relacion se recorta. El 1080x300 de antes perdia
+  // casi la mitad del alto.
   banner: {
-    size: '1080x300',
+    size: '1080x540',
     urls: [
-      'https://picsum.photos/1080/300?random=1',
-      'https://picsum.photos/1080/300?random=2',
-      'https://picsum.photos/1080/300?random=3',
-      'https://picsum.photos/1080/300?random=4',
+      'https://picsum.photos/1080/540?random=1',
+      'https://picsum.photos/1080/540?random=2',
+      'https://picsum.photos/1080/540?random=3',
+      'https://picsum.photos/1080/540?random=4',
     ]
   },
   
