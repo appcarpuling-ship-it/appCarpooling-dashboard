@@ -12,7 +12,19 @@ export const updateCostoViaje = async (data) => {
   return response.data;
 };
 
+export const getSupportEmail = async () => {
+  const response = await api.get(`${BASE}/support-email`);
+  return response.data;
+};
+
+export const updateSupportEmail = async (supportEmail) => {
+  const response = await api.put(`${BASE}/support-email`, { supportEmail });
+  return response.data;
+};
+
 export default {
   getCostoViaje,
   updateCostoViaje,
+  getSupportEmail,
+  updateSupportEmail,
 };

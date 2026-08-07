@@ -9,6 +9,8 @@ const Settings = () => {
   const [form, setForm]       = useState(EMPTY)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
+  const [supportEmail, setSupportEmail]   = useState('')
+  const [savingEmail, setSavingEmail]     = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -18,6 +20,9 @@ const Settings = () => {
       const res = await parametrosService.getCostoViaje()
       const { modo, montoPorTramo, kmPorTramo, montoFijo } = res.data || {}
       setForm({ modo: modo || 'parametrizado', montoPorTramo, kmPorTramo, montoFijo })
+
+      const mail = await parametrosService.getSupportEmail()
+      setSupportEmail(mail.data?.supportEmail || '')
     } catch (err) {
       toast.error('Error al cargar parámetros: ' + err.message)
     } finally {
@@ -48,12 +53,25 @@ const Settings = () => {
     }
   }
 
+  const handleSubmitEmail = async (e) => {
+    e.preventDefault()
+    setSavingEmail(true)
+    try {
+      await parametrosService.updateSupportEmail(supportEmail.trim())
+      toast.success('Correo de soporte actualizado')
+    } catch (err) {
+      toast.error('Error al guardar: ' + err.message)
+    } finally {
+      setSavingEmail(false)
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="page-header">
         <div>
           <h1 className="page-title">Configuración</h1>
-          <p className="page-subtitle">Parámetro de costo de viaje</p>
+          <p className="page-subtitle">Costo de viaje y correo de soporte</p>
         </div>
       </div>
 
@@ -109,6 +127,34 @@ const Settings = () => {
             </div>
           </form>
         )}
+      </div>
+
+      <div className="card p-6 max-w-md">
+        <form onSubmit={handleSubmitEmail} className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-slate-700">Correo de soporte</label>
+            <input
+              name="supportEmail"
+              type="email"
+              value={supportEmail}
+              onChange={(e) => setSupportEmail(e.target.value)}
+              className="input"
+              placeholder="soporte@carpuling.com.ar"
+              required
+            />
+            <p className="text-xs text-slate-500">
+              Es el correo que ve un usuario al que le bloquearon la cuenta, para
+              poder reclamar. Se muestra en la app apenas intenta entrar.
+            </p>
+          </div>
+
+          <div className="flex justify-end">
+            <button type="submit" disabled={savingEmail} className="btn btn-primary">
+              <Save className="w-4 h-4" />
+              {savingEmail ? 'Guardando…' : 'Guardar'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )

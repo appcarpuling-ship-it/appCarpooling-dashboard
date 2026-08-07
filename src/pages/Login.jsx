@@ -110,7 +110,7 @@ const Login = () => {
                   type="email"
                   autoComplete="email"
                   className={`input pl-9 ${errors.email ? 'input-error' : ''}`}
-                  placeholder="admin@carpuling.com.ar"
+                  placeholder="correo@ejemplo.com"
                   {...register('email', {
                     required: 'El email es requerido',
                     pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'Email inválido' }
@@ -151,17 +151,7 @@ const Login = () => {
             </button>
           </form>
 
-          <div className="mt-8 text-center space-y-2">
-            <button type="button" onClick={handleSeedAdmin} disabled={seeding}
-              className="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors">
-              {seeding ? 'Creando…' : 'Crear superadmin (setup inicial)'}
-            </button>
-            {seedMsg && (
-              <p className={`text-xs font-mono ${seedMsg.includes('creado') ? 'text-emerald-600' : 'text-red-500'}`}>
-                {seedMsg}
-              </p>
-            )}
-          </div>
+         
         </div>
       </div>
     </div>
