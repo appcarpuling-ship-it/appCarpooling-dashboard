@@ -22,9 +22,21 @@ export const updateSupportEmail = async (supportEmail) => {
   return response.data;
 };
 
+export const getSupportWhatsapp = async () => {
+  const response = await api.get(`${BASE}/support-whatsapp`);
+  return response.data;
+};
+
+export const updateSupportWhatsapp = async (supportWhatsapp) => {
+  const response = await api.put(`${BASE}/support-whatsapp`, { supportWhatsapp });
+  return response.data;
+};
+
 export default {
   getCostoViaje,
   updateCostoViaje,
   getSupportEmail,
   updateSupportEmail,
+  getSupportWhatsapp,
+  updateSupportWhatsapp,
 };

@@ -11,6 +11,7 @@ const Settings = () => {
   const [saving, setSaving]   = useState(false)
   const [supportEmail, setSupportEmail]   = useState('')
   const [savingEmail, setSavingEmail]     = useState(false)
+  const [whatsapp, setWhatsapp]           = useState('')
 
   useEffect(() => { load() }, [])
 
@@ -23,6 +24,9 @@ const Settings = () => {
 
       const mail = await parametrosService.getSupportEmail()
       setSupportEmail(mail.data?.supportEmail || '')
+
+      const wsp = await parametrosService.getSupportWhatsapp()
+      setWhatsapp(wsp.data?.supportWhatsapp || '')
     } catch (err) {
       toast.error('Error al cargar parámetros: ' + err.message)
     } finally {
@@ -58,7 +62,8 @@ const Settings = () => {
     setSavingEmail(true)
     try {
       await parametrosService.updateSupportEmail(supportEmail.trim())
-      toast.success('Correo de soporte actualizado')
+      await parametrosService.updateSupportWhatsapp(whatsapp)
+      toast.success('Datos de soporte actualizados')
     } catch (err) {
       toast.error('Error al guardar: ' + err.message)
     } finally {
@@ -71,7 +76,7 @@ const Settings = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Configuración</h1>
-          <p className="page-subtitle">Costo de viaje y correo de soporte</p>
+          <p className="page-subtitle">Costo de viaje y datos de soporte</p>
         </div>
       </div>
 
@@ -145,6 +150,23 @@ const Settings = () => {
             <p className="text-xs text-slate-500">
               Es el correo que ve un usuario al que le bloquearon la cuenta, para
               poder reclamar. Se muestra en la app apenas intenta entrar.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-slate-700">WhatsApp de soporte</label>
+            <input
+              name="supportWhatsapp"
+              type="tel"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              className="input"
+              placeholder="+54 9 345 4955395"
+              required
+            />
+            <p className="text-xs text-slate-500">
+              Con código de país. Se guardan solo los dígitos, así que podés escribirlo
+              con +, espacios o guiones. El usuario abre el chat con un mensaje ya escrito.
             </p>
           </div>
 
